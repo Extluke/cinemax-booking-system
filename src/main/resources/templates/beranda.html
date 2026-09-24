@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cineplex | Pengalaman Menonton Bioskop Terbaik</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <nav class="user-nav">
+      <a class="active" href="/">Beranda</a>
+      <a href="/jelajah">Film</a>
+      <a href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+    <div class="toolbar" sec:authorize="!isAuthenticated()">
+      <a class="btn btn-secondary" href="/login">Masuk</a>
+      <a class="btn btn-primary" href="/register">Daftar</a>
+    </div>
+    <div class="toolbar" sec:authorize="isAuthenticated()">
+      <a class="btn btn-secondary" href="/admin/dashboard" sec:authorize="hasRole('ADMIN')">Dashboard Admin</a>
+      <a class="btn btn-ghost" href="/profil" style="margin-right:8px"><span sec:authentication="name">User</span></a>
+      <form th:action="@{/logout}" method="post" style="display:inline;">
+         <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Keluar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <!-- Hero Banner -->
+    <section class="hero">
+      <div class="hero-content">
+        <span class="badge badge-info">NOW SHOWING</span>
+        <h1>Midnight Signal</h1>
+        <div class="hero-facts" aria-label="Informasi film">
+          <span>Sci-Fi</span>
+          <span>13+</span>
+          <span>124 menit</span>
+          <span>Dolby Atmos</span>
+        </div>
+        <p class="muted">Sebuah sinyal misterius membawa sekelompok ilmuwan pada rahasia terdalam yang terkubur di bawah reruntuhan kota tua.</p>
+        <div class="toolbar" style="margin-top:16px">
+          <a class="btn btn-primary" href="detail_film.html">Lihat Detail</a>
+          <a class="btn btn-secondary" href="/pilih-jadwal">Beli Tiket Sekarang</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Film Sedang Tayang Section -->
+    <section class="home-section">
+      <div class="page-head section-heading">
+        <div>
+          <h2>Film Sedang Tayang</h2>
+          <p class="muted">Pilih film favoritmu dan nikmati audio Dolby Atmos.</p>
+        </div>
+        <a href="/jelajah" class="btn btn-ghost">Jelajahi semua film</a>
+      </div>
+
+      <div class="movie-row">
+        <article class="movie-card">
+          <a href="detail_film.html">
+            <div class="poster">MIDNIGHT<br>SIGNAL</div>
+            <strong>Midnight Signal</strong>
+            <p class="muted">Sci-Fi · 13+</p>
+          </a>
+        </article>
+        <article class="movie-card">
+          <a href="detail_film.html">
+            <div class="poster" style="background:linear-gradient(145deg,#182c48,#8d2e32)">ORBIT<br>NINE</div>
+            <strong>Orbit Nine</strong>
+            <p class="muted">Action · 17+</p>
+          </a>
+        </article>
+        <article class="movie-card">
+          <a href="detail_film.html">
+            <div class="poster" style="background:linear-gradient(145deg,#14251c,#5c3925)">RUMAH<br>TERAKHIR</div>
+            <strong>Rumah Terakhir</strong>
+            <p class="muted">Horror · 17+</p>
+          </a>
+        </article>
+        <article class="movie-card">
+          <a href="detail_film.html">
+            <div class="poster" style="background:linear-gradient(145deg,#4a331a,#141414)">KOTA<br>SENJA</div>
+            <strong>Kota Senja</strong>
+            <p class="muted">Drama · SU</p>
+          </a>
+        </article>
+      </div>
+    </section>
+
+    <!-- Promosi / Fasilitas Bioskop -->
+    <section class="grid cinema-highlights home-section">
+      <div class="card">
+        <span class="badge badge-warning">PREMIUM</span>
+        <h3>Dolby Atmos Sound</h3>
+        <p class="muted" style="font-size:13px">Pengalaman audio 3D spasial dengan detail suara jernih mengelilingi seluruh ruangan studio.</p>
+      </div>
+      <div class="card">
+        <span class="badge badge-info">COMFORT</span>
+        <h3>Sweetbox & Premiere</h3>
+        <p class="muted" style="font-size:13px">Kursi sofa empuk dengan privasi ekstra dan legroom luas untuk kenyamanan maksimal.</p>
+      </div>
+      <div class="card">
+        <span class="badge badge-success">INSTANT</span>
+        <h3>Tiket Digital QR</h3>
+        <p class="muted" style="font-size:13px">Langsung masuk ke dalam studio tanpa perlu antre cetak tiket di loket fisik bioskop.</p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation (Visible on Smartphone) -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+
+  <footer>
+    <p>© 2026 Cineplex Cinema Group. Seluruh hak cipta dilindungi.</p>
+  </footer>
+</body>
+</html>
+

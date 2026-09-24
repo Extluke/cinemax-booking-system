@@ -1,0 +1,98 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tiket Saya — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <nav class="user-nav">
+      <a href="/">Beranda</a>
+      <a href="/jelajah">Film</a>
+      <a class="active" href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+    <div class="toolbar">
+      <a class="btn btn-secondary" href="/profil">Profil</a>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <div class="page-head">
+      <div>
+        <h1>Daftar Tiket Saya</h1>
+        <p class="muted">Lihat e-tiket aktif dan riwayat transaksi pemesananmu.</p>
+      </div>
+    </div>
+
+    <!-- Filter Tab Bar -->
+    <div class="toolbar" style="margin-bottom:24px">
+      <button class="btn btn-primary">Semua Tiket</button>
+      <button class="btn btn-secondary">Tiket Aktif</button>
+      <button class="btn btn-secondary">Menunggu Pembayaran</button>
+      <button class="btn btn-secondary">Riwayat Selesai</button>
+    </div>
+
+    <div class="grid" style="gap:18px">
+      <!-- Tiket 1: Siap Tonton -->
+      <article class="card">
+        <div class="page-head" style="margin-bottom:12px">
+          <div>
+            <span class="badge badge-success">SIAP DIGUNAKAN</span>
+            <h2 style="margin-top:8px">Midnight Signal</h2>
+            <p class="muted">Sabtu, 19 September 2026 · 14:00 WIB · Studio 1 (A7, A8)</p>
+          </div>
+          <div class="right">
+            <span class="muted" style="font-size:12px;display:block">Total Transaksi</span>
+            <strong style="font-size:16px">Rp70.000</strong>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:14px;justify-content:flex-end">
+          <a class="btn btn-primary" href="/detail-tiket">Buka E-Tiket & QR Code →</a>
+        </div>
+      </article>
+
+      <!-- Tiket 2: Menunggu Pembayaran -->
+      <article class="card">
+        <div class="page-head" style="margin-bottom:12px">
+          <div>
+            <span class="badge badge-warning">MENUNGGU PEMBAYARAN</span>
+            <h2 style="margin-top:8px">Orbit Nine</h2>
+            <p class="muted">Minggu, 20 September 2026 · 17:15 WIB · Studio 2 (C4)</p>
+          </div>
+          <div class="right">
+            <span class="muted" style="font-size:12px;display:block">Batas Waktu: 11:20</span>
+            <strong style="font-size:16px">Rp35.000</strong>
+          </div>
+        </div>
+        <div class="toolbar" style="margin-top:14px;justify-content:flex-end">
+          <a class="btn btn-primary" href="/faktur">Bayar Sekarang</a>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

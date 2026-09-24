@@ -1,0 +1,46 @@
+spring.application.name=cinemax
+server.port=8081
+# ----------------------------------------
+# DATABASE CONFIGURATION (MySQL)
+# ----------------------------------------
+# Ganti 'cinemax_db' dengan nama database yang akan Anda buat di MySQL
+spring.datasource.url=jdbc:mysql://localhost:3306/cinemax_db?serverTimezone=Asia/Jakarta&useSSL=false
+# Username XAMPP/MySQL
+spring.datasource.username=root
+# Password XAMPP/MySQL
+spring.datasource.password=
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+# ----------------------------------------
+# MAIL CONFIGURATION (Mailtrap)
+# ----------------------------------------
+spring.mail.host=sandbox.smtp.mailtrap.io
+spring.mail.port=2525
+# Silakan isi username, password, dan token SMTP Inbox Mailtrap Anda di sini
+spring.mail.username=YOUR_MAILTRAP_USERNAME
+spring.mail.password=YOUR_MAILTRAP_PASSWORD
+spring.mail.token=YOUR_MAILTRAP_TOKEN
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# ----------------------------------------
+# HIBERNATE & JPA CONFIGURATION
+# ----------------------------------------
+# 'update' akan secara otomatis men-generate/memodifikasi tabel di MySQL 
+# berdasarkan Class (Entity) Java yang kita buat nanti. Sangat cocok untuk tahap awal (development).
+spring.jpa.hibernate.ddl-auto=update
+# Menampilkan sintaks SQL di terminal saat aplikasi berjalan (mempermudah debugging)
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+
+# ----------------------------------------
+# CHARACTER ENCODING (Mencegah Mojibake)
+# ----------------------------------------
+server.servlet.encoding.charset=UTF-8
+server.servlet.encoding.force=true
+server.servlet.encoding.enabled=true
+spring.thymeleaf.encoding=UTF-8
+
+# Menampilkan error lengkap di browser
+server.error.include-stacktrace=always
+server.error.include-message=always

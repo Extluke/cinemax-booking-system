@@ -1,0 +1,74 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>E-Ticket — Midnight Signal | Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <div class="toolbar">
+      <a class="btn btn-secondary" href="/daftar-tiket">← Daftar Tiket</a>
+      <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Tiket</button>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <section class="ticket" role="region" aria-label="Tiket Nonton Bioskop">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div class="brand"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></div>
+        <span class="badge badge-success" style="margin-top:4px">LUNAS</span>
+      </div>
+
+      <h1>Midnight Signal</h1>
+      <p style="margin-bottom:12px">Sabtu, 19 September 2026 · 14:00 WIB</p>
+      
+      <hr>
+
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div>
+          <span class="muted" style="font-size:11px;display:block">STUDIO</span>
+          <strong style="font-size:16px">Studio 1</strong>
+        </div>
+        <div style="text-align:right">
+          <span class="muted" style="font-size:11px;display:block">NOMOR KURSI</span>
+          <strong style="font-size:16px;color:var(--color-primary)">A7, A8</strong>
+        </div>
+      </div>
+
+      <div class="qr" role="img" aria-label="QR Code Tiket Cineplex"></div>
+      <p style="text-align:center;font-size:12px;color:#555">Pindai QR Code di pintu masuk studio bioskop.</p>
+      
+      <hr>
+
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span class="mono" style="color:#666;font-size:12px">ORD-9C2A-18F4</span>
+        <small style="color:#888">Gate buka 15 mnt sebelum tayang</small>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

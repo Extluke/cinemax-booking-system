@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Admin | Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('dashboard')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Overview', 'Dashboard')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Selamat Datang, Andi</h1>
+            <p class="muted">Berikut performa dan ringkasan operasional bioskop hari ini, 19 September 2026.</p>
+          </div>
+          <div class="toolbar">
+            <button class="btn btn-secondary" onclick="window.print()">Export Laporan</button>
+            <a class="btn btn-primary" href="/admin/manajemen-jadwal">+ Jadwal Baru</a>
+          </div>
+        </div>
+
+        <!-- Metric Grid -->
+        <section class="grid grid-4">
+          <article class="card metric">
+            <div>
+              <span class="muted" style="font-size:12px">Tiket Terjual Hari Ini</span>
+              <div class="metric-value" th:text="${tiketTerjualHariIni}">0</div>
+              <span class="up">Dari transaksi lunas</span>
+            </div>
+            <span class="metric-icon">🎟️</span>
+          </article>
+
+          <article class="card metric">
+            <div>
+              <span class="muted" style="font-size:12px">Total Pendapatan</span>
+              <div class="metric-value" th:text="'Rp' + ${#numbers.formatDecimal(totalPendapatan, 0, 'COMMA', 0, 'POINT')}">Rp0</div>
+              <span class="up">Seluruh pendapatan</span>
+            </div>
+            <span class="metric-icon">💰</span>
+          </article>
+
+          <article class="card metric">
+            <div>
+              <span class="muted" style="font-size:12px">Tiket Terverifikasi</span>
+              <div class="metric-value" th:text="${tiketTerverifikasi}">0</div>
+              <span class="up">Tiket berstatus VALID</span>
+            </div>
+            <span class="metric-icon">✓</span>
+          </article>
+
+          <article class="card metric">
+            <div>
+              <span class="muted" style="font-size:12px">Permintaan Refund</span>
+              <div class="metric-value" th:text="${permintaanRefund}">0</div>
+              <span class="down">Transaksi dibatalkan</span>
+            </div>
+            <span class="metric-icon">↺</span>
+          </article>
+        </section>
+
+        <!-- Charts & Occupancy Grid -->
+        <div class="grid grid-2" style="margin-top:20px">
+          <section class="card">
+            <div class="page-head" style="margin-bottom:12px">
+              <div>
+                <h3>Tren Penjualan Mingguan</h3>
+                <span class="muted" style="font-size:12px">Volume tiket terkonfirmasi</span>
+              </div>
+              <span class="badge badge-success" th:text="${growthPercentage}">+0%</span>
+            </div>
+            <div style="height: 180px; width: 100%; position: relative;">
+              <canvas id="salesChart"></canvas>
+            </div>
+          </section>
+
+          <section class="card">
+            <div class="page-head" style="margin-bottom:12px">
+              <div>
+                <h3>Okupansi Studio</h3>
+                <span class="muted" style="font-size:12px">Kapasitas kursi terisi hari ini</span>
+              </div>
+              <span class="badge badge-info">Real-time</span>
+            </div>
+            <div class="stat-list">
+              <div th:if="${#lists.isEmpty(occupancyList)}">
+                <span class="muted">Belum ada studio aktif.</span>
+              </div>
+              <th:block th:each="occ : ${occupancyList}">
+                <div>
+                  <span th:text="${occ.namaStudio}">Studio 1 (Regular)</span>
+                  <strong th:text="${occ.persentase + '% (' + occ.tiketTerjual + ' / ' + occ.totalKapasitasHariIni + ' Kursi)'}">82% (115 / 140 Kursi)</strong>
+                </div>
+                <div class="progress"><span th:style="'width:' + ${occ.persentase} + '%'"></span></div>
+              </th:block>
+            </div>
+          </section>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <section class="card" style="margin-top:20px">
+          <div class="page-head" style="margin-bottom:14px">
+            <div>
+              <h3>Transaksi Terbaru</h3>
+              <p class="muted" style="font-size:12px">5 transaksi terakhir yang tercatat di sistem.</p>
+            </div>
+            <a class="btn btn-ghost" href="/admin/manajemen-transaksi">Lihat Semua Transaksi →</a>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>No. Pesanan</th>
+                  <th>Pelanggan</th>
+                  <th>Film</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="tr : ${transaksiTerbaru}">
+                  <td class="mono" th:text="${tr.nomorPesanan}">ORD-XXXX</td>
+                  <td><strong th:text="${tr.pelanggan != null ? tr.pelanggan.namaLengkap : 'Tamu'}">Nama Pelanggan</strong></td>
+                  <td><span class="muted" style="font-size:12px" th:text="${#temporals.format(tr.tanggalTransaksi, 'dd MMM yyyy, HH:mm')}">Tanggal</span></td>
+                  <td th:text="'Rp' + ${#numbers.formatDecimal(tr.totalHarga, 0, 'COMMA', 0, 'POINT')}">Rp0</td>
+                  <td>
+                    <span th:if="${tr.status.name() == 'SUCCESS'}" class="badge badge-success">Success</span>
+                    <span th:if="${tr.status.name() == 'PENDING'}" class="badge badge-warning">Pending</span>
+                    <span th:if="${tr.status.name() == 'REFUND'}" class="badge badge-danger">Refund</span>
+                  </td>
+                  <td><a class="btn btn-ghost" style="padding:4px 8px;font-size:12px"
+                      href="/admin/manajemen-transaksi">Detail</a></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(transaksiTerbaru)}">
+                  <td colspan="6" style="text-align:center" class="muted">Belum ada transaksi.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script th:inline="javascript">
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    const chartLabels = /*[[${chartLabels}]]*/ [];
+    const chartData = /*[[${chartData}]]*/ [];
+    
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: chartLabels,
+        datasets: [{
+          label: 'Tiket Terjual',
+          data: chartData,
+          borderColor: '#E50914',
+          backgroundColor: 'rgba(229, 9, 20, 0.1)',
+          borderWidth: 2,
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          y: { 
+            beginAtZero: true, 
+            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+            ticks: { precision: 0, color: '#aaa' } 
+          },
+          x: { 
+            grid: { display: false },
+            ticks: { color: '#aaa' }
+          }
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>

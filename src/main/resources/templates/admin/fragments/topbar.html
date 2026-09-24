@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+      <header class="topbar" th:fragment="topbar(breadcrumb, title)">
+        <div>
+          <small th:text="${breadcrumb}">Master Data / Halaman</small>
+          <h2 th:text="${title}">Judul Halaman</h2>
+        </div>
+        <div class="profile" style="display:flex; align-items:center; gap:16px;">
+          <div style="display:flex; align-items:center; gap:8px;">
+              <div class="avatar" th:text="${userInitials != null ? userInitials : 'AD'}">AD</div>
+              <span th:text="${currentUser != null ? currentUser.namaLengkap : 'Administrator'}">Administrator</span>
+          </div>
+          <form th:action="@{/logout}" method="post" style="margin:0;">
+              <button type="submit" class="btn btn-danger" style="padding:6px 12px; font-size:13px;">Log Out</button>
+          </form>
+        </div>
+      </header>
+</body>
+</html>

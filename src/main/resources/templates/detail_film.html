@@ -1,0 +1,94 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Midnight Signal — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <nav class="user-nav">
+      <a href="/">Beranda</a>
+      <a class="active" href="/jelajah">Film</a>
+      <a href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+    <div class="toolbar">
+      <a class="btn btn-secondary" href="/jelajah">← Kembali</a>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <section class="hero">
+      <div>
+        <div class="toolbar" style="margin-bottom:12px">
+          <span class="badge badge-info">SCI-FI</span>
+          <span class="badge badge-warning">13+</span>
+          <span class="muted" style="font-size:12px">124 Menit · Dolby Atmos · 2D</span>
+        </div>
+        <h1>Midnight Signal</h1>
+        <p class="muted" style="max-width:680px">Sebuah sinyal radio frekuensi tinggi yang misterius membawa sekelompok peneliti pada rahasia peradaban kuno yang terkubur di bawah kedalaman kota metropolitan.</p>
+        <div class="toolbar" style="margin-top:20px">
+          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket Sekarang</a>
+          <button class="btn btn-secondary">▶ Putar Trailer</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Detail Informasi Film -->
+    <div class="grid grid-3" style="margin-top:28px">
+      <div class="card">
+        <span class="muted" style="font-size:12px;display:block">Sutradara</span>
+        <strong style="font-size:15px">Damian Pratama</strong>
+      </div>
+      <div class="card">
+        <span class="muted" style="font-size:12px;display:block">Pemeran Utama</span>
+        <strong style="font-size:15px">Arga Wicaksono, Maya Saraswati</strong>
+      </div>
+      <div class="card">
+        <span class="muted" style="font-size:12px;display:block">Bahasa / Subtitle</span>
+        <strong style="font-size:15px">Indonesia / English Sub</strong>
+      </div>
+    </div>
+
+    <!-- Film Serupa -->
+    <section style="margin-top:36px">
+      <h2>Film Serupa</h2>
+      <div class="movie-row">
+        <div class="movie-card">
+          <div class="poster" style="background:linear-gradient(145deg,#182c48,#8d2e32)">ORBIT<br>NINE</div>
+          <strong>Orbit Nine</strong>
+          <p class="muted">Action · 17+</p>
+        </div>
+        <div class="movie-card">
+          <div class="poster" style="background:linear-gradient(145deg,#4a331a,#141414)">KOTA<br>SENJA</div>
+          <strong>Kota Senja</strong>
+          <p class="muted">Drama · SU</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

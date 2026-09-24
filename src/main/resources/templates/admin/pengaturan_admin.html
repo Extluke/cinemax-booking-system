@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pengaturan Akun & Sistem | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .config-row { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+    .config-row .day-label { width: 100px; font-weight: 600; font-size: 14px; }
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+    }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute; cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc; transition: .4s;
+      border-radius: 22px;
+    }
+    .slider:before {
+      position: absolute; content: "";
+      height: 16px; width: 16px; left: 3px; bottom: 3px;
+      background-color: white; transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked ~ .slider { background-color: var(--color-primary); }
+    input:checked ~ .slider:before { transform: translateX(18px); }
+    .time-inputs { display: flex; gap: 8px; margin-left: 12px; align-items: center; }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('pengaturan')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Sistem', 'Pengaturan')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Pengaturan Akun & Sistem</h1>
+            <p class="muted">Kelola profil, pengaturan jam tayang spesifik, hingga payment gateway secara global.</p>
+          </div>
+        </div>
+
+        <div th:if="${param.success}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+            <strong>Berhasil!</strong> Pengaturan sistem global berhasil disimpan.
+        </div>
+        
+        <div th:if="${param.success_profil}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+            <strong>Berhasil!</strong> Profil administrator berhasil diperbarui.
+        </div>
+        
+        <div th:if="${param.success_password}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 24px;">
+            <strong>Berhasil!</strong> Password berhasil diubah.
+        </div>
+
+        <div style="max-width: 800px;">
+          <!-- Profil Administrator -->
+          <section class="card" style="margin-bottom: 20px;">
+            <h3>Profil Administrator</h3>
+            <p class="muted" style="font-size:12.5px;margin-bottom:14px">Informasi identitas admin yang akan tercatat di log aktivitas.</p>
+            <form method="POST" th:action="@{/admin/pengaturan/profil}" th:object="${adminUser}">
+              <div class="field">
+                <label for="admin-name">Nama Lengkap</label>
+                <input class="input" id="admin-name" type="text" name="namaLengkap" th:value="*{namaLengkap}" required>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label for="admin-email">Alamat Email Resmi</label>
+                <input class="input" id="admin-email" type="email" name="email" th:value="*{email}" required>
+              </div>
+              <button class="btn btn-primary" type="submit" style="margin-top:16px">Simpan Profil</button>
+            </form>
+          </section>
+
+          <!-- Keamanan & Ganti Password -->
+          <section class="card" style="margin-bottom: 20px;">
+            <h3>Keamanan Akun</h3>
+            <p class="muted" style="font-size:12.5px;margin-bottom:14px">Perbarui kata sandi secara berkala untuk menjaga keamanan data bioskop.</p>
+            <form method="POST" th:action="@{/admin/pengaturan/password}">
+              <div class="field">
+                <label for="current-pass">Password Saat Ini</label>
+                <input class="input" id="current-pass" type="password" name="currentPassword" placeholder="Masukkan password lama..." required>
+              </div>
+              <div class="field" style="margin-top:10px">
+                <label for="new-pass">Password Baru</label>
+                <input class="input" id="new-pass" type="password" name="newPassword" placeholder="Minimal 8 karakter unik" required>
+              </div>
+              <button class="btn btn-secondary" type="submit" style="margin-top:16px">Ubah Password</button>
+            </form>
+          </section>
+
+          <form method="POST" th:action="@{/admin/pengaturan}" th:object="${config}">
+            <!-- Profil & Operasional -->
+            <section class="card" style="margin-bottom: 20px;">
+                <h3>Profil & Operasional Bioskop</h3>
+                <p class="muted" style="font-size:12.5px;margin-bottom:14px">Identitas cabang, jam kerja spesifik harian, dan payment gateway.</p>
+                
+                <h4 style="margin-top:20px; margin-bottom:10px; font-size: 14px;">Detail Cabang</h4>
+                <div class="field">
+                    <label>Nama Bioskop</label>
+                    <input class="input" type="text" th:field="*{namaBioskop}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Alamat Cabang</label>
+                    <input class="input" type="text" th:field="*{alamatBioskop}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Kontak CS (WhatsApp/Email)</label>
+                    <input class="input" type="text" th:field="*{kontakCs}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Tautan Sematan (Embed URL) Google Maps</label>
+                    <input class="input" type="text" th:field="*{gmapsEmbedUrl}" placeholder="https://www.google.com/maps/embed?pb=...">
+                </div>
+
+                <h4 style="margin-top:24px; margin-bottom:10px; font-size: 14px;">Jam Operasional per Hari</h4>
+                <p class="muted" style="font-size:12.5px;margin-bottom:14px">Nyalakan toggle untuk menetapkan hari operasional. Jika mati (tutup), form jam akan disembunyikan.</p>
+                
+                <!-- SENIN -->
+                <div class="config-row">
+                    <div class="day-label">Senin</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{seninBuka}" onchange="toggleTimeInputs('senin', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="senin-time-inputs" class="time-inputs" th:style="${config.seninBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{seninJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{seninJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- SELASA -->
+                <div class="config-row">
+                    <div class="day-label">Selasa</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{selasaBuka}" onchange="toggleTimeInputs('selasa', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="selasa-time-inputs" class="time-inputs" th:style="${config.selasaBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{selasaJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{selasaJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- RABU -->
+                <div class="config-row">
+                    <div class="day-label">Rabu</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{rabuBuka}" onchange="toggleTimeInputs('rabu', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="rabu-time-inputs" class="time-inputs" th:style="${config.rabuBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{rabuJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{rabuJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- KAMIS -->
+                <div class="config-row">
+                    <div class="day-label">Kamis</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{kamisBuka}" onchange="toggleTimeInputs('kamis', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="kamis-time-inputs" class="time-inputs" th:style="${config.kamisBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{kamisJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{kamisJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- JUMAT -->
+                <div class="config-row">
+                    <div class="day-label">Jumat</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{jumatBuka}" onchange="toggleTimeInputs('jumat', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="jumat-time-inputs" class="time-inputs" th:style="${config.jumatBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{jumatJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{jumatJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- SABTU -->
+                <div class="config-row">
+                    <div class="day-label">Sabtu</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{sabtuBuka}" onchange="toggleTimeInputs('sabtu', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="sabtu-time-inputs" class="time-inputs" th:style="${config.sabtuBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{sabtuJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{sabtuJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <!-- MINGGU -->
+                <div class="config-row">
+                    <div class="day-label">Minggu</div>
+                    <label class="toggle-switch">
+                      <input type="checkbox" th:field="*{mingguBuka}" onchange="toggleTimeInputs('minggu', this.checked)">
+                      <span class="slider"></span>
+                    </label>
+                    <div id="minggu-time-inputs" class="time-inputs" th:style="${config.mingguBuka ? 'display: flex;' : 'display: none;'}">
+                        <input class="input" type="time" th:field="*{mingguJamMulai}" style="max-width:110px">
+                        <span style="align-self: center;">-</span>
+                        <input class="input" type="time" th:field="*{mingguJamSelesai}" style="max-width:110px">
+                    </div>
+                </div>
+
+                <h4 style="margin-top:24px; margin-bottom:10px; font-size: 14px;">Provider Payment Gateway 💳</h4>
+                <div class="field">
+                    <label>Environment</label>
+                    <select class="input" th:field="*{production}">
+                        <option th:value="false">Sandbox (Testing)</option>
+                        <option th:value="true">Production (Live)</option>
+                    </select>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Client Key</label>
+                    <input class="input" type="text" id="paymentClientKey" name="paymentClientKey" th:value="${config.paymentClientKey != null and !config.paymentClientKey.isEmpty() ? '********' : ''}" placeholder="SB-Mid-client-...">
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Server Key</label>
+                    <input class="input" type="password" id="paymentServerKey" name="paymentServerKey" th:value="${config.paymentServerKey != null and !config.paymentServerKey.isEmpty() ? '********' : ''}" placeholder="SB-Mid-server-...">
+                </div>
+            </section>
+
+            <!-- Biaya & Transaksi -->
+            <section class="card" style="margin-bottom: 20px;">
+                <h3>Konfigurasi Biaya & Transaksi 🧾</h3>
+                <p class="muted" style="font-size:12.5px;margin-bottom:14px">Atur tarif pajak, biaya aplikasi, dan batas kuota pembelian.</p>
+                
+                <div class="field">
+                    <label>Pajak / PPN (%)</label>
+                    <input class="input" type="number" step="0.1" th:field="*{taxRate}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Biaya Layanan (Platform Fee) Rp</label>
+                    <input class="input" type="number" th:field="*{platformFee}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Maksimal Tiket per Transaksi</label>
+                    <input class="input" type="number" th:field="*{maxTicketsPerTransaction}" required>
+                </div>
+            </section>
+
+            <!-- Kebijakan Refund -->
+            <section class="card" style="margin-bottom: 20px;">
+                <h3>Kebijakan Refund 🔄</h3>
+                <p class="muted" style="font-size:12.5px;margin-bottom:14px">Aturan pengajuan pengembalian dana tiket oleh pelanggan.</p>
+                
+                <div class="field">
+                    <label>Batas Waktu Pengajuan (Jam sebelum tayang)</label>
+                    <input class="input" type="number" th:field="*{refundTimeLimitHours}" required>
+                </div>
+                <div class="field" style="margin-top:10px">
+                    <label>Potongan Saldo Refund (%)</label>
+                    <input class="input" type="number" step="0.1" th:field="*{refundDeductionPercentage}" required>
+                    <span class="muted" style="font-size:11px; display:block; margin-top:4px;">Cth: 20% berarti pelanggan hanya menerima 80% dari total bayar.</span>
+                </div>
+            </section>
+            
+            <div style="margin-top: 24px; margin-bottom: 40px; text-align: left;">
+                <button class="btn btn-primary" type="submit" style="padding: 12px 24px; font-size: 16px;">Simpan Semua Pengaturan Sistem</button>
+            </div>
+          </form>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function toggleTimeInputs(day, isChecked) {
+        const inputsDiv = document.getElementById(day + '-time-inputs');
+        if (isChecked) {
+            inputsDiv.style.display = 'flex';
+        } else {
+            inputsDiv.style.display = 'none';
+        }
+    }
+
+    // Initialize toggle state on load
+    document.addEventListener("DOMContentLoaded", function() {
+        const days = ['senin', 'selasa', 'rabu', 'kamis', 'jumat', 'sabtu', 'minggu'];
+        days.forEach(day => {
+            const checkbox = document.querySelector('input[name="' + day + 'Buka1"]');
+            if(checkbox) {
+                // Thymeleaf generates name="seninBuka" or something. Wait, thymeleaf generates a hidden field as well.
+                // It's safer to rely on the id if it has one, but thymeleaf auto-generates id based on field name.
+            }
+        });
+        
+        // simpler init: find all checkboxes inside .toggle-switch
+        const toggles = document.querySelectorAll('.toggle-switch input[type="checkbox"]');
+        toggles.forEach(toggle => {
+            // Find which day it is by looking at its name (e.g., seninBuka)
+            const name = toggle.name;
+            if(name && name.endsWith('Buka')) {
+                const day = name.replace('Buka', '');
+                toggleTimeInputs(day, toggle.checked);
+            }
+        });
+    });
+  </script>
+</body>
+</html>

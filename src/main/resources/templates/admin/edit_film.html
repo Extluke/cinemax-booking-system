@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Edit Film: ' + ${film.judul} + ' | Admin Cineplex'">Edit Film</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="content" style="max-width:960px;margin:0 auto">
+    <div class="page-head">
+      <div>
+        <a class="brand" href="/admin/dashboard" style="padding:0 0 8px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+        <h1 th:text="'Edit Film: ' + ${film.judul}">Edit Film</h1>
+        <p class="muted">Perbarui data informasi judul, sinopsis, atau poster film.</p>
+      </div>
+      <a class="btn btn-secondary" href="/admin/manajemen-film">← Batal & Kembali</a>
+    </div>
+
+    <section class="card">
+      <form id="filmForm" th:action="@{/admin/edit-film}" method="post" enctype="multipart/form-data" onsubmit="return validateForm(event)">
+        <input type="hidden" name="id" th:value="${film.id}">
+        
+        <div class="form-grid">
+          <div>
+            <!-- Poster Display & Dropzone -->
+            <div class="dropzone" id="posterDropzone" role="button" tabindex="0" aria-label="Area Unggah Poster Film" onclick="document.getElementById('posterFile').click()">
+              <input type="file" id="posterFile" name="posterFile" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="previewPoster(event)">
+              
+              <div id="posterPlaceholder" th:style="${film.posterUrl != null and film.posterUrl != '/img/poster_placeholder.jpg'} ? 'display:none;' : ''">
+                <span style="font-size:32px;margin-bottom:8px">🖼️</span>
+                <strong>Klik untuk mengubah file poster</strong>
+                <span style="font-size:13px">Biarkan kosong jika tidak ingin mengubah poster</span>
+              </div>
+              
+              <img id="posterPreview" th:src="${film.posterUrl != null ? film.posterUrl : '#'}" alt="Preview Poster" 
+                   th:style="${film.posterUrl != null and film.posterUrl != '/img/poster_placeholder.jpg'} ? 'display:block; max-width:100%; height:auto; border-radius:4px;' : 'display:none; max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);'">
+            </div>
+            <div style="text-align:center;margin-top:14px">
+              <button class="btn btn-secondary" type="button" style="width:100%;max-width:240px" onclick="document.getElementById('posterFile').click()">Ganti File Poster</button>
+            </div>
+          </div>
+
+          <div class="grid" style="gap:14px">
+            <div class="field">
+              <label for="movie-title">Judul Film</label>
+              <input class="input" id="movie-title" name="judul" th:value="${film.judul}">
+            </div>
+            <div class="field">
+              <label for="duration">Durasi Penayangan (Menit)</label>
+              <input class="input" id="duration" name="durasi" type="number" th:value="${film.durasi}">
+            </div>
+            <div class="field">
+              <label for="status">Status Penayangan</label>
+              <select class="select" id="status" name="status">
+                <option value="SEGERA" th:selected="${film.status.name() == 'SEGERA'}">Segera Tayang (Coming Soon)</option>
+                <option value="SEDANG_TAYANG" th:selected="${film.status.name() == 'SEDANG_TAYANG'}">Sedang Tayang (Now Playing)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="batasUsia">Batas Usia Penonton</label>
+              <select class="select" id="batasUsia" name="batasUsia">
+                <option value="SU" th:selected="${film.batasUsia == 'SU'}">SU (Semua Umur)</option>
+                <option value="13+" th:selected="${film.batasUsia == '13+'}">13+ (Remaja)</option>
+                <option value="17+" th:selected="${film.batasUsia == '17+'}">17+ (Dewasa)</option>
+                <option value="21+" th:selected="${film.batasUsia == '21+'}">21+ (Khusus)</option>
+              </select>
+            </div>
+            <div class="field" style="grid-column: 1 / -1;">
+              <label>Kategori Genre Utama</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:10px; margin-top:8px;">
+                <label th:each="genre : ${genres}" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <!-- Check if film has this genre -->
+                  <input type="checkbox" name="genreIds" th:value="${genre.id}" class="genre-checkbox"
+                         th:checked="${#lists.contains(film.genres, genre)}">
+                  <span th:text="${genre.nama}">Genre</span>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label for="synopsis">Sinopsis Lengkap</label>
+            <textarea class="textarea" id="synopsis" name="sinopsis" th:text="${film.sinopsis}"></textarea>
+          </div>
+
+          <div class="full" style="display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap">
+            <button class="btn btn-danger" type="button" th:onclick="'hapusFilm(' + ${film.id} + ')'">Hapus Film</button>
+            <div style="display:flex;gap:10px">
+              <a class="btn btn-secondary" href="/admin/manajemen-film">Batal</a>
+              <button class="btn btn-primary" type="submit" id="submitBtn">Simpan Perubahan</button>
+            </div>
+          </div>
+        </div>
+      </form>
+      
+      <!-- Form untuk Hapus Film (tersembunyi) -->
+      <form id="deleteForm" method="post" style="display:none;"></form>
+    </section>
+  </main>
+  
+  <script>
+    function previewPoster(event) {
+      const input = event.target;
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Cek ukuran file (Max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Ukuran file terlalu besar! Maksimal 2MB.");
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            if (this.width > this.height) {
+                alert("Peringatan: Gambar yang Anda unggah berbentuk Lanskap (Lebar). Disarankan menggunakan gambar Portrait (Tinggi).");
+            }
+            document.getElementById('posterPlaceholder').style.display = 'none';
+            const preview = document.getElementById('posterPreview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          img.src = e.target.result;
+        }
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function hapusFilm(id) {
+        if(confirm('Yakin ingin menghapus film ini? Tindakan ini tidak bisa dibatalkan.')) {
+            const form = document.getElementById('deleteForm');
+            form.action = '/admin/hapus-film/' + id;
+            form.submit();
+        }
+    }
+
+    // FORM VALIDATION SCRIPT
+    function validateForm(e) {
+        // Karena ini edit, poster tidak wajib diunggah lagi, tetapi atribut lain wajib
+        const judul = document.getElementById('movie-title').value.trim();
+        const durasi = document.getElementById('duration').value.trim();
+        const status = document.getElementById('status').value;
+        const batasUsia = document.getElementById('batasUsia').value;
+        const sinopsis = document.getElementById('synopsis').value.trim();
+        const posterFile = document.getElementById('posterFile').files[0];
+        
+        const checkboxes = document.querySelectorAll('.genre-checkbox');
+        let genreTercentang = false;
+        for (let i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                genreTercentang = true;
+                break;
+            }
+        }
+
+        let errors = [];
+        if (!judul) errors.push("- Judul Film tidak boleh kosong");
+        
+        if (posterFile) {
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(posterFile.type)) {
+                errors.push("- Format Poster salah! Hanya terima JPG, PNG, atau WEBP.");
+            }
+            if (posterFile.size > 2 * 1024 * 1024) {
+                errors.push("- Ukuran Poster melebihi batas maksimal 2MB.");
+            }
+        }
+        
+        if (!durasi) errors.push("- Durasi Penayangan tidak boleh kosong");
+        if (!status) errors.push("- Status Penayangan belum dipilih");
+        if (!batasUsia) errors.push("- Batas Usia belum dipilih");
+        if (!genreTercentang) errors.push("- Minimal 1 Genre harus dipilih");
+        if (!sinopsis) errors.push("- Sinopsis tidak boleh kosong");
+
+        if (errors.length > 0) {
+            e.preventDefault(); // Hentikan pengiriman form
+            alert("Terdapat isian yang belum lengkap/salah:\n\n" + errors.join("\n"));
+            return false;
+        }
+        
+        // Disable button to prevent double submit
+        document.getElementById('submitBtn').innerHTML = "Menyimpan...";
+        document.getElementById('submitBtn').style.opacity = 0.7;
+        return true;
+    }
+  </script>
+</body>
+</html>

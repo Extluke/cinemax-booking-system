@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Film | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('film')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Master Data / Film', 'Manajemen Film')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Katalog & Judul Film</h1>
+            <p class="muted">Kelola seluruh judul film yang tampil di katalog dan jadwal penayangan.</p>
+          </div>
+          <a class="btn btn-primary" href="/admin/tambah-film">+ Tambah Film Baru</a>
+        </div>
+
+        <!-- Filter & Search Controls -->
+        <form class="filters" method="get" action="/admin/manajemen-film" style="display: flex; gap: 10px; margin-bottom: 20px;">
+          <input class="input" type="search" name="search" th:value="${currentSearch}" placeholder="Cari judul film...">
+          <select class="select" name="status">
+            <option value="">Semua Status</option>
+            <option value="SEDANG_TAYANG" th:selected="${currentStatus == 'SEDANG_TAYANG'}">Sedang Tayang</option>
+            <option value="SEGERA" th:selected="${currentStatus == 'SEGERA'}">Segera Tayang (Coming Soon)</option>
+            <option value="TIDAK_TAYANG" th:selected="${currentStatus == 'TIDAK_TAYANG'}">Turun Layar</option>
+          </select>
+          <select class="select" name="genreId">
+            <option value="">Semua Genre</option>
+            <option th:each="genre : ${genres}" 
+                    th:value="${genre.id}" 
+                    th:text="${genre.nama}"
+                    th:selected="${currentGenreId == genre.id}"></option>
+          </select>
+          <select class="select" name="sort">
+            <option value="terbaru" th:selected="${currentSort == 'terbaru' or currentSort == null}">Terbaru</option>
+            <option value="terlama" th:selected="${currentSort == 'terlama'}">Terlama</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Terapkan</button>
+          <a href="/admin/manajemen-film" class="btn btn-secondary" style="padding: 8px 16px;">Reset</a>
+        </form>
+
+        <section class="poster-grid">
+          <article class="card" style="display:flex;flex-direction:column;justify-content:space-between" th:each="film : ${films}">
+            <div>
+              <!-- Jika ada poster, tampilkan gambar -->
+              <img th:if="${film.posterUrl != null and film.posterUrl != '/img/poster_placeholder.jpg'}" th:src="${film.posterUrl}" class="poster" style="object-fit: cover; width: 100%;" alt="Poster Film">
+              
+              <!-- Fallback Gradient Jika Kosong -->
+              <div th:unless="${film.posterUrl != null and film.posterUrl != '/img/poster_placeholder.jpg'}" class="poster" style="background:linear-gradient(145deg,#182c48,#8d2e32); display:flex; align-items:center; justify-content:center; text-align:center; padding:10px;">
+                <span th:text="${film.judul}" style="font-weight:bold; font-size:18px;">JUDUL</span>
+              </div>
+              <div style="margin-top:12px">
+                <span th:if="${film.status?.name() == 'SEDANG_TAYANG'}" class="badge badge-success">Tayang</span>
+                <span th:if="${film.status?.name() == 'SEGERA'}" class="badge badge-info">Segera Tayang</span>
+                <h3 style="margin-top:6px" th:text="${film.judul}">Judul Film</h3>
+                <p class="muted" style="font-size:12.5px">
+                  <!-- Menampilkan genre yang dipilih (dipisahkan dengan koma) -->
+                  <span th:each="genre, iterStat : ${film.genres}">
+                      <span th:text="${genre.nama}">Genre</span><span th:if="${!iterStat.last}">, </span>
+                  </span>
+                  <span th:if="${film.genres.empty}">Tanpa Genre</span>
+                  · <span th:text="${film.durasi}">0</span> menit
+                </p>
+              </div>
+            </div>
+            <div class="toolbar" style="margin-top:14px;width:100%">
+              <a class="btn btn-secondary" style="flex:1" th:href="@{/admin/edit-film(id=${film.id})}">Edit Data</a>
+              <a class="btn btn-ghost" style="padding:8px" href="/admin/manajemen-jadwal" title="Lihat Jadwal">⏱</a>
+            </div>
+          </article>
+          
+          <div th:if="${#lists.isEmpty(films)}" style="grid-column: 1 / -1; text-align:center; padding: 40px; color: #888;">
+             Belum ada film yang ditambahkan. Silakan tambah film baru.
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
+

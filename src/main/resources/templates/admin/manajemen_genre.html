@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Genre | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('genre')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Master Data / Genre', 'Manajemen Genre')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Kategori & Genre Film</h1>
+            <p class="muted">Kelola daftar genre yang dapat dipilih saat menambahkan film baru.</p>
+          </div>
+          <a class="btn btn-primary" href="/admin/tambah-genre">+ Tambah Genre</a>
+        </div>
+
+        <!-- Notifications -->
+        <div th:if="${param.success}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-top: 20px;">
+          <strong>Berhasil!</strong> Genre baru telah ditambahkan.
+        </div>
+        <div th:if="${param.deleted}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-top: 20px;">
+          <strong>Dihapus!</strong> Genre berhasil dihapus.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'in_use'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-top: 20px;">
+          <strong>Gagal Dihapus!</strong> Genre ini tidak dapat dihapus karena sedang digunakan oleh satu atau lebih film.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'unknown'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-top: 20px;">
+          <strong>Gagal!</strong> Terjadi kesalahan sistem: <span th:text="${errorMessage}"></span>
+        </div>
+
+        <section class="card" style="margin-top:20px">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nama Genre</th>
+                  <th style="width:100px;text-align:right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr th:each="genre : ${genres}">
+                  <td class="mono" th:text="${genre.id}">1</td>
+                  <td><strong th:text="${genre.nama}">Action</strong></td>
+                  <td style="text-align:right">
+                    <form th:action="@{/admin/hapus-genre/{id}(id=${genre.id})}" method="post" style="display:inline;" onsubmit="return confirm('Yakin ingin menghapus genre ini?');">
+                        <button type="submit" class="btn btn-ghost" style="color:#d9534f;padding:4px 8px;font-size:12px;cursor:pointer">Hapus</button>
+                    </form>
+                  </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(genres)}">
+                  <td colspan="3" style="text-align:center" class="muted">Belum ada genre yang terdaftar.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

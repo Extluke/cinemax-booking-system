@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Refund | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('refund')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Keuangan', 'Manajemen Refund')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Daftar Pengajuan Refund</h1>
+            <p class="muted">Review dan kelola permohonan pengembalian dana tiket.</p>
+          </div>
+        </div>
+
+        <div th:if="${param.approved}" style="background-color: #d1fae5; color: #065f46; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            Pengajuan refund berhasil disetujui.
+        </div>
+        <div th:if="${param.rejected}" style="background-color: #fee2e2; color: #991b1b; padding: 10px; border-radius: 5px; margin-bottom: 15px;">
+            Pengajuan refund telah ditolak.
+        </div>
+
+        <form class="filters" method="get" action="/admin/refunds">
+          <input class="input" type="search" name="search" th:value="${currentSearch}" placeholder="Cari No. Order / Pelanggan...">
+          <select class="select" name="status">
+            <option th:selected="${currentStatus == 'Semua Status' or currentStatus == null}">Semua Status</option>
+            <option th:selected="${currentStatus == 'PENDING'}">PENDING</option>
+            <option th:selected="${currentStatus == 'APPROVED'}">APPROVED</option>
+            <option th:selected="${currentStatus == 'REJECTED'}">REJECTED</option>
+            <option th:selected="${currentStatus == 'PROCESSED'}">PROCESSED</option>
+          </select>
+          <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Terapkan</button>
+          <a href="/admin/refunds" class="btn btn-secondary" style="padding: 8px 16px;">Reset</a>
+        </form>
+
+        <section class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No. Pesanan</th>
+                <th>Pelanggan</th>
+                <th>Alasan Refund</th>
+                <th>Waktu Pengajuan</th>
+                <th>Status</th>
+                <th class="right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${#lists.isEmpty(refunds)}">
+                <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">Belum ada pengajuan refund.</td>
+              </tr>
+              <tr th:each="r : ${refunds}">
+                <td class="mono"><strong th:text="${r.transaksi.nomorPesanan}">ORD-XXX</strong></td>
+                <td>
+                    <strong th:text="${r.transaksi.pelanggan.namaLengkap}">Nama Pelanggan</strong><br>
+                    <small class="muted" th:text="${'Rp' + #numbers.formatDecimal(r.transaksi.totalHarga, 0, 'COMMA', 0, 'POINT')}">Rp100.000</small>
+                </td>
+                <td th:text="${r.alasan}">Salah pesan</td>
+                <td th:text="${#temporals.format(r.waktuPengajuan, 'dd MMM yyyy HH:mm')}">19 Sep 2026</td>
+                <td>
+                  <span class="badge badge-warning" th:if="${r.status.name() == 'PENDING'}">PENDING</span>
+                  <span class="badge badge-success" th:if="${r.status.name() == 'APPROVED'}">APPROVED</span>
+                  <span class="badge badge-danger" th:if="${r.status.name() == 'REJECTED'}">REJECTED</span>
+                  <span class="badge" style="background:#4b5563; color:white;" th:if="${r.status.name() == 'PROCESSED'}">PROCESSED</span>
+                </td>
+                <td class="right" style="display: flex; gap: 5px; justify-content: flex-end;">
+                  <form th:action="@{/admin/refund/approve/{id}(id=${r.id})}" method="post" th:if="${r.status.name() == 'PENDING'}" onsubmit="return confirm('Yakin ingin menyetujui refund ini?');">
+                    <button type="submit" class="btn btn-success" style="padding:5px 12px;font-size:12px; cursor: pointer;">Approve</button>
+                  </form>
+                  <button type="button" class="btn btn-danger" style="padding:5px 12px;font-size:12px; cursor: pointer;"
+                          th:if="${r.status.name() == 'PENDING'}"
+                          th:attr="onclick=|openRejectModal('${r.id}')|">Reject</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Modal Reject Refund -->
+        <div id="rejectModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+          <div style="background:white; padding:20px; border-radius:8px; min-width:300px; max-width:500px;">
+            <h3>Tolak Pengajuan Refund</h3>
+            <form id="rejectForm" th:action="@{/admin/refund/reject/placeholder}" method="post">
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px;">Catatan Penolakan</label>
+                <textarea name="alasanTolak" class="input" style="width:100%; height:80px;" required placeholder="Misal: Tidak memenuhi syarat refund..."></textarea>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeRejectModal()">Batal</button>
+                <button type="submit" class="btn btn-danger">Tolak Refund</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <script>
+          function openRejectModal(id) {
+            document.getElementById('rejectForm').action = '/admin/refund/reject/' + id;
+            document.getElementById('rejectModal').style.display = 'flex';
+          }
+          function closeRejectModal() {
+            document.getElementById('rejectModal').style.display = 'none';
+          }
+        </script>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

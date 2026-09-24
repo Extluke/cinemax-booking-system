@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Daftar Akun Baru — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth">
+  <section class="auth-card" role="region" aria-label="Form Daftar Akun">
+    <div style="text-align:center;margin-bottom:12px">
+      <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+      <h1>Buat Akun Baru</h1>
+      <p class="muted">Dapatkan promo eksklusif dan kemudahan booking tiket.</p>
+    </div>
+
+    <!-- Notifikasi Error Register -->
+    <div th:if="${param.error == 'email_exists'}" style="background-color: #ff4d4f; color: white; padding: 10px; border-radius: 6px; margin-bottom: 16px; text-align: center; font-size: 14px;">
+      Gagal mendaftar. Email tersebut sudah terdaftar sebelumnya.
+    </div>
+
+    <form th:action="@{/register-process}" method="POST" id="registerForm">
+      <div class="field">
+        <label for="name">Nama Lengkap</label>
+        <input class="input" id="name" name="namaLengkap" type="text" placeholder="Nama lengkap kamu" required autocomplete="name">
+      </div>
+      <div class="field">
+        <label for="email">Alamat Email</label>
+        <input class="input" id="email" name="email" type="email" placeholder="nama@email.com" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input class="input" id="password" name="password" type="password" placeholder="Minimal 8 karakter" required minlength="8" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:6px">Daftar Sekarang</button>
+    </form>
+
+    <div style="text-align:center;margin-top:16px" class="muted">
+      Sudah memiliki akun? <a href="/login" style="color:#ffffff;font-weight:600">Masuk di sini</a>
+    </div>
+
+    <hr>
+    <div style="text-align:center">
+      <a class="btn btn-ghost" href="/">← Kembali ke Beranda</a>
+    </div>
+  </section>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const nameInput = document.getElementById("name");
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+
+      nameInput.addEventListener("invalid", function(event) {
+        if (event.target.validity.valueMissing) {
+          event.target.setCustomValidity("Boleh tahu nama kamu siapa? Mohon diisi ya.");
+        } else {
+          event.target.setCustomValidity("");
+        }
+      });
+      nameInput.addEventListener("input", function(event) { event.target.setCustomValidity(""); });
+
+      emailInput.addEventListener("invalid", function(event) {
+        if (event.target.validity.valueMissing) {
+          event.target.setCustomValidity("Email wajib diisi untuk pendaftaran akun.");
+        } else if (event.target.validity.typeMismatch) {
+          event.target.setCustomValidity("Pastikan format emailnya benar (contoh: nama@email.com).");
+        } else {
+          event.target.setCustomValidity("");
+        }
+      });
+      emailInput.addEventListener("input", function(event) { event.target.setCustomValidity(""); });
+
+      passwordInput.addEventListener("invalid", function(event) {
+        if (event.target.validity.valueMissing) {
+          event.target.setCustomValidity("Password wajib diisi sebagai pengaman akunmu.");
+        } else if (event.target.validity.tooShort) {
+          event.target.setCustomValidity("Password terlalu pendek! Minimal 8 karakter ya.");
+        } else {
+          event.target.setCustomValidity("");
+        }
+      });
+      passwordInput.addEventListener("input", function(event) { event.target.setCustomValidity(""); });
+    });
+  </script>
+</body>
+</html>

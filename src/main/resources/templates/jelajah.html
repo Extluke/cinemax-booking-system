@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jelajah Film | Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <nav class="user-nav">
+      <a href="/">Beranda</a>
+      <a class="active" href="/jelajah">Film</a>
+      <a href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+    <div class="toolbar" sec:authorize="!isAuthenticated()">
+      <a class="btn btn-secondary" href="/login">Masuk</a>
+      <a class="btn btn-primary" href="/register">Daftar</a>
+    </div>
+    <div class="toolbar" sec:authorize="isAuthenticated()">
+      <a class="btn btn-secondary" href="/admin/dashboard" sec:authorize="hasRole('ADMIN')">Dashboard Admin</a>
+      <a class="btn btn-ghost" href="/profil" style="margin-right:8px"><span sec:authentication="name">User</span></a>
+      <form th:action="@{/logout}" method="post" style="display:inline;">
+         <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Keluar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <div class="page-head">
+      <div>
+        <h1>Jelajah Katalog Film</h1>
+        <p class="muted">Temukan tontonan terbaik untuk akhir pekanmu.</p>
+      </div>
+      <div class="filters" style="margin-bottom:0">
+        <input class="input" id="film-search" type="search" placeholder="Cari judul film..." aria-label="Cari judul film">
+        <select class="select" id="genre-filter" aria-label="Filter genre film">
+          <option>Semua Genre</option>
+          <option>Action</option>
+          <option>Horror</option>
+          <option>Drama</option>
+          <option>Sci-Fi</option>
+        </select>
+      </div>
+    </div>
+
+    <p class="catalogue-status muted" id="catalogue-status" aria-live="polite">Menampilkan 4 film</p>
+    <div class="poster-grid" id="film-catalogue">
+      <article class="card" data-movie data-title="Midnight Signal" data-genre="sci-fi">
+        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Midnight Signal">
+          <div class="poster">MIDNIGHT<br>SIGNAL</div>
+        </a>
+        <div class="movie-details">
+          <span class="badge badge-info">Sci-Fi</span>
+          <strong>Midnight Signal</strong>
+          <p class="muted" style="font-size:12px">124 Menit · 13+</p>
+          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
+        </div>
+      </article>
+
+      <article class="card" data-movie data-title="Orbit Nine" data-genre="action">
+        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Orbit Nine">
+          <div class="poster" style="background:linear-gradient(145deg,#182c48,#8d2e32)">ORBIT<br>NINE</div>
+        </a>
+        <div class="movie-details">
+          <span class="badge badge-warning">Action</span>
+          <strong>Orbit Nine</strong>
+          <p class="muted" style="font-size:12px">118 Menit · 17+</p>
+          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
+        </div>
+      </article>
+
+      <article class="card" data-movie data-title="Rumah Terakhir" data-genre="horror">
+        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Rumah Terakhir">
+          <div class="poster" style="background:linear-gradient(145deg,#14251c,#5c3925)">RUMAH<br>TERAKHIR</div>
+        </a>
+        <div class="movie-details">
+          <span class="badge badge-danger">Horror</span>
+          <strong>Rumah Terakhir</strong>
+          <p class="muted" style="font-size:12px">102 Menit · 17+</p>
+          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
+        </div>
+      </article>
+
+      <article class="card" data-movie data-title="Kota Senja" data-genre="drama">
+        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Kota Senja">
+          <div class="poster" style="background:linear-gradient(145deg,#4a331a,#141414)">KOTA<br>SENJA</div>
+        </a>
+        <div class="movie-details">
+          <span class="badge badge-success">Drama</span>
+          <strong>Kota Senja</strong>
+          <p class="muted" style="font-size:12px">110 Menit · SU</p>
+          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
+        </div>
+      </article>
+    </div>
+    <div class="catalogue-empty" id="catalogue-empty" hidden>
+      <h2>Film tidak ditemukan</h2>
+      <p class="muted">Coba gunakan judul atau genre lain.</p>
+    </div>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+  <script src="/js/app.js"></script>
+</body>
+</html>
+

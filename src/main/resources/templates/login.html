@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Masuk — Akun Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body class="auth">
+  <section class="auth-card" role="region" aria-label="Form Masuk Akun">
+    <div style="text-align:center;margin-bottom:12px">
+      <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+      <h1>Selamat Datang</h1>
+      <p class="muted">Masuk untuk memesan tiket dan melihat jadwal bioskop.</p>
+    </div>
+
+    <!-- Notifikasi Error Login -->
+    <div th:if="${param.error}"
+      style="background-color: #ff4d4f; color: white; padding: 10px; border-radius: 6px; margin-bottom: 16px; text-align: center; font-size: 14px;">
+      Email atau password yang Anda masukkan salah.
+    </div>
+    <div th:if="${param.success == 'registered'}"
+      style="background-color: #52c41a; color: white; padding: 10px; border-radius: 6px; margin-bottom: 16px; text-align: center; font-size: 14px;">
+      Registrasi berhasil! Silakan masuk.
+    </div>
+    <div th:if="${param.success == 'password_reset'}"
+      style="background-color: #52c41a; color: white; padding: 10px; border-radius: 6px; margin-bottom: 16px; text-align: center; font-size: 14px;">
+      Password berhasil diubah! Silakan masuk.
+    </div>
+
+    <form th:action="@{/login-process}" method="POST" id="loginForm">
+      <div class="field">
+        <label for="email">Alamat Email</label>
+        <input class="input" id="email" name="email" type="email" placeholder="nama@email.com" required
+          autocomplete="email">
+      </div>
+      <div class="field">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <label for="password">Password</label>
+          <a href="/lupa-password" class="muted" style="font-size:12px">Lupa password?</a>
+        </div>
+        <input class="input" id="password" name="password" type="password" placeholder="••••••••" required
+          autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" type="submit" style="width:100%;margin-top:6px">Masuk ke Akun</button>
+    </form>
+
+    <div style="text-align:center;margin-top:16px" class="muted">
+      Belum punya akun? <a href="/register" style="color:#ffffff;font-weight:600">Daftar sekarang</a>
+    </div>
+
+    <hr>
+    <div style="text-align:center">
+      <a class="btn btn-ghost" href="/">Kembali ke Beranda</a>
+    </div>
+  </section>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const emailInput = document.getElementById("email");
+      const passwordInput = document.getElementById("password");
+
+      emailInput.addEventListener("invalid", function (event) {
+        if (event.target.validity.valueMissing) {
+          event.target.setCustomValidity("Halo! Email tidak boleh kosong ya, mohon diisi.");
+        } else if (event.target.validity.typeMismatch) {
+          event.target.setCustomValidity("Pastikan format emailnya benar (contoh: nama@email.com).");
+        } else {
+          event.target.setCustomValidity("");
+        }
+      });
+      emailInput.addEventListener("input", function (event) {
+        event.target.setCustomValidity("");
+      });
+
+      passwordInput.addEventListener("invalid", function (event) {
+        if (event.target.validity.valueMissing) {
+          event.target.setCustomValidity("Sstt! Passwordnya jangan sampai ketinggalan, mohon diisi.");
+        } else {
+          event.target.setCustomValidity("");
+        }
+      });
+      passwordInput.addEventListener("input", function (event) {
+        event.target.setCustomValidity("");
+      });
+    });
+  </script>
+</body>
+
+</html>

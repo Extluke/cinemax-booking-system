@@ -1,0 +1,76 @@
+=================================================
+             INFORMASI PROYEK CINEMAX
+=================================================
+Nama Proyek  : Cinemax Booking System
+Versi        : 1.0.1 (Security Patched)
+Konteks      : Tugas Besar IPPL Semester 5
+Tech Stack   : Java 17, Spring Boot 3, Hibernate, MySQL, Thymeleaf
+=================================================
+
+[1] INFORMASI SERVER & PORT
+-------------------------------------------------
+- Port Aplikasi Backend  : 8081
+- Akses Lokal            : http://localhost:8081
+- Database               : MySQL (Port bawaan 3306)
+- Nama Database          : cinemax_db
+
+[2] AKUN DEFAULT (DUMMY ACCOUNTS)
+-------------------------------------------------
+Sistem memiliki seeder otomatis yang akan membuat akun-akun ini jika belum ada:
+
+* SUPER ADMIN (Akses Penuh + Pengaturan + Laporan)
+  - Email    : superadmin@cineplex.com
+  - Password : superadmin123
+  - Role     : ROLE_SUPER_ADMIN
+
+* ADMIN (Kasir & Staf Biasa)
+  - Email    : admin@cineplex.com
+  - Password : admin123
+  - Role     : ROLE_ADMIN
+
+[3] KREDENSIAL EKSTERNAL (3RD PARTY)
+-------------------------------------------------
+Proyek ini terintegrasi dengan 2 layanan eksternal utama:
+1. Midtrans (Payment Gateway)
+   - Digunakan untuk checkout tiket.
+   - Kredensial dapat dikonfigurasi melalui Login Super Admin -> Pengaturan.
+   - Secret Key tidak disimpan dalam mode text biasa.
+
+2. Mailtrap (SMTP Server)
+   - Digunakan untuk fitur Lupa Password.
+   - Konfigurasi diletakkan di `src/main/resources/application.properties`.
+   - Lihat file `application.properties.example` untuk template konfigurasi yang aman.
+
+[4] CATATAN KEAMANAN (SECURITY AUDIT)
+-------------------------------------------------
+Versi ini telah melalui proses Whitebox & Blackbox Testing mendalam.
+Celah kritis yang TELAH ditambal:
+- [PATCHED] Spring Security Privilege Escalation (Pemblokiran akses admin biasa ke halaman Super Admin).
+- [PATCHED] Midtrans Data Exposure (Penyensoran Server Key di halaman UI).
+- [PATCHED] Double Booking / Race Condition pada Tiket.
+- [PATCHED] Insecure Direct Object Reference (IDOR) pada API Checkout.
+- [PATCHED] Unrestricted File Upload pada fitur unggah Poster Film.
+
+[5] TATA CARA MENJALANKAN APLIKASI
+-------------------------------------------------
+A. BAGI PENGGUNA BARU (Pertama Kali Clone/Buka)
+1. Buka XAMPP, nyalakan modul 'Apache' dan 'MySQL'.
+2. Buka phpMyAdmin (http://localhost/phpmyadmin).
+3. Buat database kosong baru dengan nama `cinemax_db`.
+4. Copy file `src/main/resources/application.properties.example` menjadi `application.properties`.
+5. Isi kredensial SMTP Mailtrap Anda di file `application.properties` (opsional jika hanya ingin tes fitur selain lupa password).
+6. Buka terminal di dalam folder proyek ini (Cinemax).
+7. Jalankan perintah: 
+   Windows: `.\mvnw spring-boot:run`
+   Mac/Linux: `./mvnw spring-boot:run`
+8. Tunggu hingga muncul tulisan "Started CinemaxApplication". Buka browser ke `http://localhost:8081`. Database akan otomatis dibuatkan tabelnya dan di-isi dengan akun dummy.
+
+B. BAGI PENGGUNA LAMA (Sudah Pernah Run Sebelumnya)
+1. Buka XAMPP, pastikan modul 'MySQL' sudah running.
+2. Buka terminal di folder proyek ini.
+3. Jalankan perintah: `.\mvnw spring-boot:run`
+4. Buka browser ke `http://localhost:8081`. Selesai!
+
+=================================================
+Gunakan README.md untuk panduan penjelasan teknis lengkap.
+=================================================

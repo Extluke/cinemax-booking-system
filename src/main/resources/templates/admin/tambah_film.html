@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tambah Film Baru | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="content" style="max-width:960px;margin:0 auto">
+    <div class="page-head">
+      <div>
+        <a class="brand" href="/admin/dashboard" style="padding:0 0 8px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+        <h1>Tambah Film Baru</h1>
+        <p class="muted">Isi detail metadata film untuk ditampilkan pada jadwal tayang.</p>
+      </div>
+      <a class="btn btn-secondary" href="/admin/manajemen-film">← Batal & Kembali</a>
+    </div>
+
+    <section class="card">
+      <form th:action="@{/admin/tambah-film}" method="post" enctype="multipart/form-data" id="filmForm" onsubmit="return validateForm(event)">
+        <div class="form-grid">
+          <div class="dropzone" id="posterDropzone" role="button" tabindex="0" aria-label="Area Unggah Poster Film" onclick="document.getElementById('posterFile').click()">
+            <input type="file" id="posterFile" name="posterFile" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="previewPoster(event)">
+            
+            <div id="posterPlaceholder">
+              <span style="font-size:32px;margin-bottom:8px">🖼️</span>
+              <strong>Klik untuk memilih file dari komputer</strong>
+              <span style="font-size:13px">Format: PNG, JPG, WEBP · Maksimal 2MB (Rasio disarankan 2:3, cth: 600x900px)</span>
+            </div>
+            
+            <img id="posterPreview" src="#" alt="Preview Poster" style="display:none; max-width: 100%; height: auto; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+          </div>
+          <div class="grid" style="gap:14px">
+            <div class="field">
+              <label for="movie-title">Judul Film</label>
+              <input class="input" id="movie-title" name="judul" placeholder="Contoh: Midnight Signal" required>
+            </div>
+            <div class="field">
+              <label for="duration">Durasi Penayangan (Menit)</label>
+              <input class="input" id="duration" name="durasi" type="number" placeholder="Contoh: 124" required>
+            </div>
+            <div class="field">
+              <label for="status">Status Penayangan</label>
+              <select class="select" id="status" name="status">
+                <option value="SEGERA">Segera Tayang (Coming Soon)</option>
+                <option value="SEDANG_TAYANG" selected>Sedang Tayang (Now Playing)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="batasUsia">Batas Usia Penonton</label>
+              <select class="select" id="batasUsia" name="batasUsia">
+                <option value="SU">SU (Semua Umur)</option>
+                <option value="13+" selected>13+ (Remaja)</option>
+                <option value="17+">17+ (Dewasa)</option>
+                <option value="21+">21+ (Khusus)</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Kategori Genre Utama</label>
+              <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:8px;">
+                <label th:each="genre : ${genres}" style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                  <input type="checkbox" name="genreIds" th:value="${genre.id}">
+                  <span th:text="${genre.nama}">Genre</span>
+                </label>
+              </div>
+              <p th:if="${#lists.isEmpty(genres)}" class="muted" style="font-size:12px; margin-top:8px;">
+                Belum ada genre. <a href="/admin/tambah-genre" style="color:#007bff;text-decoration:none">Tambah baru</a>.
+              </p>
+            </div>
+          </div>
+
+          <div class="field full">
+            <label for="synopsis">Sinopsis Lengkap</label>
+            <textarea class="textarea" id="synopsis" name="sinopsis" placeholder="Tuliskan rangkuman cerita atau sinopsis film yang memikat penonton..." required></textarea>
+          </div>
+
+          <div class="full" style="display:flex;gap:12px;justify-content:flex-end;flex-wrap:wrap">
+            <a class="btn btn-secondary" href="/admin/manajemen-film">Batal</a>
+            <button class="btn btn-primary" type="submit" id="submitBtn">Simpan & Publikasikan Film</button>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script>
+    function previewPoster(event) {
+      const input = event.target;
+      if (input.files && input.files[0]) {
+        const file = input.files[0];
+        
+        // Cek ukuran file (Max 2MB)
+        if (file.size > 2 * 1024 * 1024) {
+            alert("Ukuran file terlalu besar! Maksimal 2MB.");
+            input.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          const img = new Image();
+          img.onload = function() {
+            // Cek apakah gambar lanskap
+            if (this.width > this.height) {
+                alert("Peringatan: Gambar yang Anda unggah berbentuk Lanskap (Lebar). Disarankan menggunakan gambar Portrait (Tinggi) dengan rasio 2:3 agar tampilan di website lebih rapi.");
+            }
+            
+            // Tampilkan preview
+            document.getElementById('posterPlaceholder').style.display = 'none';
+            const preview = document.getElementById('posterPreview');
+            preview.src = e.target.result;
+            preview.style.display = 'block';
+          };
+          img.src = e.target.result;
+        }
+        
+        reader.readAsDataURL(file);
+      }
+    }
+
+    // FORM VALIDATION SCRIPT (Mengecek 8 Kondisi)
+    function validateForm(e) {
+        const judul = document.getElementById('movie-title').value.trim();
+        const posterFile = document.getElementById('posterFile').files[0];
+        const durasi = document.getElementById('duration').value.trim();
+        const status = document.getElementById('status').value;
+        const batasUsia = document.getElementById('batasUsia').value;
+        const sinopsis = document.getElementById('synopsis').value.trim();
+        
+        // Pengecekan Kategori Genre (Minimal 1 tercentang)
+        // Ambil elemen input genre menggunakan document.getElementsByName karena tidak ada id spesifik
+        const checkboxes = document.getElementsByName('genreIds');
+        let genreTercentang = false;
+        for (let i = 0; i < checkboxes.length; i++) {
+            if (checkboxes[i].checked) {
+                genreTercentang = true;
+                break;
+            }
+        }
+
+        let errors = [];
+        
+        // 1. Judul diisi
+        if (!judul) errors.push("- Judul Film belum diisi.");
+        
+        // 2 & 3. Poster diunggah & Sesuai Format (Size & Tipe)
+        if (!posterFile) {
+            errors.push("- Poster Film belum diunggah.");
+        } else {
+            // Pengecekan Ekstensi
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+            if (!allowedTypes.includes(posterFile.type)) {
+                errors.push("- Format Poster salah! Hanya terima JPG, PNG, atau WEBP.");
+            }
+            // Pengecekan Size (Maksimal 2MB)
+            if (posterFile.size > 2 * 1024 * 1024) {
+                errors.push("- Ukuran Poster melebihi batas maksimal 2MB.");
+            }
+        }
+
+        // 4. Durasi diisi
+        if (!durasi) errors.push("- Durasi Penayangan belum diisi.");
+        
+        // 5. Status terselect
+        if (!status) errors.push("- Status Penayangan belum dipilih.");
+        
+        // 6. Batas usia terselect
+        if (!batasUsia) errors.push("- Batas Usia belum dipilih.");
+        
+        // 7. Kategori genre tercentang (min 1)
+        if (!genreTercentang) errors.push("- Minimal 1 Kategori Genre harus dicentang.");
+        
+        // 8. Sinopsis diisi
+        if (!sinopsis) errors.push("- Sinopsis Lengkap belum diisi.");
+
+        // Eksekusi Pengecekan
+        if (errors.length > 0) {
+            e.preventDefault(); // Batalkan pengiriman data
+            alert("MAAF, FORMULIR TIDAK BISA DISIMPAN!\n\nMohon perbaiki " + errors.length + " kesalahan berikut:\n" + errors.join("\n"));
+            return false;
+        }
+        
+        // Disable button to prevent double submit and show loading state
+        document.getElementById('submitBtn').innerHTML = "Menyimpan...";
+        document.getElementById('submitBtn').style.opacity = 0.7;
+        return true;
+    }
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Faktur Pesanan — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <div style="text-align:center">
+      <strong>Checkout Tiket</strong>
+    </div>
+    <span class="badge badge-warning">Langkah 3/3</span>
+  </header>
+
+  <main class="user-content">
+    <div class="notice" style="max-width:680px;margin:0 auto 20px">
+      <strong>⏱ Selesaikan pembayaran dalam 14:59</strong><br>
+      <small>Pesanan akan dibatalkan otomatis oleh sistem jika batas waktu habis.</small>
+    </div>
+
+    <section class="card" style="max-width:680px;margin:0 auto">
+      <div class="page-head" style="margin-bottom:18px">
+        <div>
+          <h1>Ringkasan Pesanan</h1>
+          <p class="muted">Periksa kembali detail tiket sebelum membayar.</p>
+        </div>
+        <span class="badge badge-warning">Menunggu Bayar</span>
+      </div>
+
+      <div class="stat-list">
+        <div>
+          <span>Judul Film</span>
+          <strong>Midnight Signal</strong>
+        </div>
+        <div>
+          <span>Jadwal Tayang</span>
+          <strong>19 September 2026 · 14:00 WIB</strong>
+        </div>
+        <div>
+          <span>Studio & Tipe</span>
+          <strong>Studio 1 · Regular 2D</strong>
+        </div>
+        <div>
+          <span>Nomor Kursi</span>
+          <strong>A7, A8 (2 Tiket)</strong>
+        </div>
+        <div>
+          <span>Harga Tiket</span>
+          <span>2 x Rp35.000 = Rp70.000</span>
+        </div>
+        <div>
+          <span>Biaya Layanan</span>
+          <span>Rp3.000</span>
+        </div>
+        <div style="font-size:15px;padding-top:10px">
+          <strong>Total Pembayaran</strong>
+          <strong style="color:var(--color-primary);font-size:18px">Rp73.000</strong>
+        </div>
+      </div>
+
+      <div style="margin-top:28px">
+        <a class="btn btn-primary" style="width:100%" href="/daftar-tiket">Bayar Sekarang dengan Payment Gateway →</a>
+        <a class="btn btn-secondary" style="width:100%;margin-top:10px" href="/pilih-kursi">Ubah Kursi</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

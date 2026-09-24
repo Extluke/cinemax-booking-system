@@ -1,0 +1,100 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilih Jadwal — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <div style="text-align:center">
+      <strong>Midnight Signal</strong><br>
+      <span class="muted" style="font-size:12px">124 Menit · 13+</span>
+    </div>
+    <span class="badge badge-info">Langkah 1/3</span>
+  </header>
+
+  <main class="user-content">
+    <div class="page-head">
+      <div>
+        <h1>Pilih Jadwal Tayang</h1>
+        <p class="muted">Tentukan tanggal dan jam pertunjukan yang kamu inginkan.</p>
+      </div>
+    </div>
+
+    <!-- Date selector -->
+    <div class="schedule-days">
+      <div class="card day" style="border-color:var(--color-primary);background-color:var(--color-bg-elevated)">
+        <strong>Hari Ini</strong><br>
+        <span class="muted" style="font-size:12px">19 Sep 2026</span>
+      </div>
+      <div class="card day">
+        <strong>Besok</strong><br>
+        <span class="muted" style="font-size:12px">20 Sep 2026</span>
+      </div>
+      <div class="card day">
+        <strong>Senin</strong><br>
+        <span class="muted" style="font-size:12px">21 Sep 2026</span>
+      </div>
+      <div class="card day">
+        <strong>Selasa</strong><br>
+        <span class="muted" style="font-size:12px">22 Sep 2026</span>
+      </div>
+    </div>
+
+    <!-- Studio 1 Regular -->
+    <section class="card" style="margin-top:24px">
+      <div class="page-head" style="margin-bottom:14px">
+        <div>
+          <h2>Studio 1 (Regular 2D)</h2>
+          <span class="muted" style="font-size:12px">Audio Dolby Surround 7.1 · Layar Curved</span>
+        </div>
+        <span class="badge badge-success">Tersedia</span>
+      </div>
+      <div class="toolbar">
+        <a class="btn btn-secondary" href="/pilih-kursi"><strong>14:00</strong> <span class="muted" style="font-size:11px">Rp35.000</span></a>
+        <a class="btn btn-secondary" href="/pilih-kursi"><strong>17:10</strong> <span class="muted" style="font-size:11px">Rp35.000</span></a>
+        <a class="btn btn-secondary" href="/pilih-kursi"><strong>20:20</strong> <span class="muted" style="font-size:11px">Rp40.000</span></a>
+      </div>
+    </section>
+
+    <!-- Studio Premiere -->
+    <section class="card" style="margin-top:20px">
+      <div class="page-head" style="margin-bottom:14px">
+        <div>
+          <h2>Premiere Hall (Dolby Atmos)</h2>
+          <span class="muted" style="font-size:12px">Sofa Recliner Elektrik · Selimut & Snack Bar</span>
+        </div>
+        <span class="badge badge-warning">VIP</span>
+      </div>
+      <div class="toolbar">
+        <a class="btn btn-secondary" href="/pilih-kursi"><strong>15:00</strong> <span class="muted" style="font-size:11px">Rp75.000</span></a>
+        <a class="btn btn-secondary" href="/pilih-kursi"><strong>19:30</strong> <span class="muted" style="font-size:11px">Rp75.000</span></a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Transaksi | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('transaksi')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Keuangan', 'Manajemen Transaksi')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Data Transaksi & Riwayat Pembayaran</h1>
+            <p class="muted">Pantau status transaksi payment, bukti pembayaran, dan proses permohonan refund.</p>
+          </div>
+          <button class="btn btn-secondary" onclick="window.print()">Export Riwayat CSV</button>
+        </div>
+
+        <div class="filters">
+          <input class="input" type="search" placeholder="Cari No. Order / Pelanggan...">
+          <select class="select">
+            <option>Semua Status</option>
+            <option>Success (Berhasil)</option>
+            <option>Pending (Menunggu)</option>
+            <option>Refund (Dikembalikan)</option>
+            <option>Expired / Batal</option>
+          </select>
+          <input class="input" type="date" value="2026-09-19" style="max-width:180px">
+        </div>
+
+        <section class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>No. Pesanan</th>
+                <th>Nama Pelanggan</th>
+                <th>Total Nominal</th>
+                <th>Status Pembayaran</th>
+                <th>Tanggal & Waktu</th>
+                <th class="right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${#lists.isEmpty(transaksis)}">
+                <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">Belum ada data transaksi.</td>
+              </tr>
+              <tr th:each="trx : ${transaksis}">
+                <td class="mono" th:text="${trx.nomorPesanan}">ORD-9C2A-18F4</td>
+                <td><strong th:text="${trx.pelanggan.namaLengkap}">Rina Wijaya</strong></td>
+                <td><strong th:text="${'Rp' + #numbers.formatDecimal(trx.totalHarga, 0, 'COMMA', 0, 'POINT')}">Rp140.000</strong></td>
+                <td>
+                  <span class="badge badge-success" th:if="${trx.status.name() == 'SUCCESS'}">Success</span>
+                  <span class="badge badge-warning" th:if="${trx.status.name() == 'PENDING'}">Pending</span>
+                  <span class="badge badge-danger" th:if="${trx.status.name() == 'REFUND'}">Refund</span>
+
+                  <span class="badge badge-warning" th:if="${trx.refundStatus.name() == 'PENDING_REFUND'}" style="margin-left: 5px;">Refund Pending</span>
+                  <span class="badge badge-danger" th:if="${trx.refundStatus.name() == 'REFUNDED'}" style="margin-left: 5px;">Refunded</span>
+                </td>
+                <td th:text="${#temporals.format(trx.tanggalTransaksi, 'dd MMM yyyy HH:mm')}">19 Sep 2026 10:32</td>
+                <td class="right" style="display: flex; gap: 5px; justify-content: flex-end;">
+                  <a class="btn btn-secondary" style="padding:5px 12px;font-size:12px" href="#">Detail</a>
+                  <button type="button" class="btn btn-danger" style="padding:5px 12px;font-size:12px; cursor: pointer;" 
+                          th:if="${trx.status.name() == 'SUCCESS' and trx.refundStatus.name() == 'NONE'}"
+                          th:attr="onclick=|openRefundModal('${trx.id}', '${trx.nomorPesanan}')|">Ajukan Refund</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <!-- Modal Pengajuan Refund -->
+        <div id="refundModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center;">
+          <div style="background:white; padding:20px; border-radius:8px; min-width:300px; max-width:500px;">
+            <h3>Ajukan Refund</h3>
+            <p>Order: <strong id="refundOrderNumber"></strong></p>
+            <form th:action="@{/admin/transaksi/ajukan-refund}" method="post">
+              <input type="hidden" id="refundTransaksiId" name="transaksiId">
+              <div style="margin-bottom:15px;">
+                <label style="display:block; margin-bottom:5px;">Alasan Refund</label>
+                <textarea name="alasan" class="input" style="width:100%; height:80px;" required placeholder="Misal: Kesalahan pelanggan, jadwal dibatalkan..."></textarea>
+              </div>
+              <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button type="button" class="btn btn-secondary" onclick="closeRefundModal()">Batal</button>
+                <button type="submit" class="btn btn-primary">Submit</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <script>
+          function openRefundModal(id, orderNumber) {
+            document.getElementById('refundTransaksiId').value = id;
+            document.getElementById('refundOrderNumber').innerText = orderNumber;
+            document.getElementById('refundModal').style.display = 'flex';
+          }
+          function closeRefundModal() {
+            document.getElementById('refundModal').style.display = 'none';
+          }
+        </script>
+
+      </main>
+    </div>
+  </div>
+</body>
+</html>
+

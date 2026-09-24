@@ -1,0 +1,78 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Profil Saya — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <nav class="user-nav">
+      <a href="/">Beranda</a>
+      <a href="/jelajah">Film</a>
+      <a href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+    <div class="toolbar">
+      <a class="btn btn-secondary" href="/">Keluar</a>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <section class="auth-card" style="margin:0 auto">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:20px">
+        <div class="avatar" style="width:52px;height:52px;font-size:18px">RW</div>
+        <div>
+          <h2>Rina Wijaya</h2>
+          <span class="badge badge-success">MEMBER VIP</span>
+        </div>
+      </div>
+
+      <h1>Pengaturan Akun</h1>
+      <form>
+        <div class="field">
+          <label>Nama Lengkap</label>
+          <input class="input" value="Rina Wijaya">
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input class="input" type="email" value="rina@email.com">
+        </div>
+        <div class="field">
+          <label>Nomor Telepon</label>
+          <input class="input" type="tel" value="081234567890">
+        </div>
+        <button class="btn btn-primary" type="button" style="margin-top:8px">Simpan Perubahan</button>
+      </form>
+
+      <hr>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <a class="btn btn-ghost" href="/daftar-tiket">Lihat Tiket Saya →</a>
+        <a class="btn btn-danger" style="padding:6px 14px;font-size:12px" href="/login">Keluar Akun</a>
+      </div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation -->
+  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
+    <a href="/" class="bottom-nav-item">
+      <span class="bottom-nav-icon">⌂</span>
+      <span>Beranda</span>
+    </a>
+    <a href="/jelajah" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎬</span>
+      <span>Film</span>
+    </a>
+    <a href="/daftar-tiket" class="bottom-nav-item">
+      <span class="bottom-nav-icon">🎟</span>
+      <span>Tiket Saya</span>
+    </a>
+    <a href="/profil" class="bottom-nav-item active">
+      <span class="bottom-nav-icon">👤</span>
+      <span>Akun</span>
+    </a>
+  </nav>
+</body>
+</html>
+

@@ -1,0 +1,301 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+  <title th:text="${studio != null ? 'Edit Studio Bioskop | Admin Cineplex' : 'Tambah Studio Baru | Admin Cineplex'}">Tambah Studio Baru | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth">
+  <section class="auth-card" style="width:min(540px, 100%)">
+    <div style="margin-bottom:16px">
+      <a class="brand" href="/admin/dashboard" style="padding:0 0 8px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+      <h1 th:text="${studio != null ? 'Edit Studio Bioskop' : 'Tambah Studio Bioskop'}">Tambah Studio Bioskop</h1>
+      <p class="muted" th:text="${studio != null ? 'Perbarui informasi studio.' : 'Konfigurasi ruangan studio baru beserta kelengkapan fiturnya.'}">Konfigurasi ruangan studio baru beserta kelengkapan fiturnya.</p>
+    </div>
+
+    <form method="POST" th:action="${studio != null ? '/admin/edit-ruangan' : '/admin/tambah-ruangan'}">
+      <input type="hidden" name="id" th:if="${studio != null}" th:value="${studio.id}">
+      <div class="field">
+        <label for="room-name">Nama Studio</label>
+        <input class="input" id="room-name" name="nama" placeholder="Contoh: Studio 3 (IMAX)" th:value="${studio != null ? studio.nama : ''}" required>
+      </div>
+
+      <div class="field">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label for="room-type" style="margin:0">Tipe Studio</label>
+            <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="document.getElementById('modal-tipe').style.display='flex'">+ Kelola Tipe</button>
+        </div>
+        <select class="select" id="room-type" name="tipeId" required>
+          <option value="" disabled selected>-- Pilih Tipe Studio --</option>
+          <option th:each="tipe : ${listTipe}" th:value="${tipe.id}" th:text="${tipe.nama}" th:selected="${studio != null and studio.tipe != null and studio.tipe.id == tipe.id}"></option>
+        </select>
+      </div>
+      
+      <div class="field">
+        <label for="room-status">Status Operasional</label>
+        <select class="select" id="room-status" name="status" required>
+          <option value="AKTIF" th:selected="${studio != null and studio.status != null and studio.status.name() == 'AKTIF'}">Aktif Beroperasi</option>
+          <option value="RENOVASI" th:selected="${studio != null and studio.status != null and studio.status.name() == 'RENOVASI'}">Dalam Pemeliharaan (Renovasi)</option>
+          <option value="DITUTUP" th:selected="${studio != null and studio.status != null and studio.status.name() == 'DITUTUP'}">Ditutup Sementara</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="desc">Deskripsi Fasilitas</label>
+        <textarea class="textarea" id="desc" name="deskripsi" placeholder="Jelaskan spesifikasi ruang, letak layar, atau info unik lainnya..." th:text="${studio != null ? studio.deskripsi : ''}"></textarea>
+      </div>
+
+      <div class="field">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+            <label style="margin:0">Fitur & Fasilitas Terpasang</label>
+            <button type="button" class="btn btn-secondary" style="padding:2px 8px; font-size:11px;" onclick="document.getElementById('modal-fasilitas').style.display='flex'">+ Kelola Fasilitas</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:6px;font-size:13.5px" id="fasilitas-container">
+          <!-- Render Dynamic -->
+          <label style="display:flex;align-items:center;gap:8px" th:each="f : ${listFasilitas}">
+            <input type="checkbox" name="fasilitasIds" th:value="${f.id}" th:checked="${studioFasilitasIds != null and #lists.contains(studioFasilitasIds, f.id)}"> 
+            <span th:text="${f.nama}">Fasilitas</span>
+          </label>
+          <div th:if="${listFasilitas.empty}" class="muted" style="font-size:12px; grid-column:1/-1;">Belum ada fasilitas di database.</div>
+        </div>
+      </div>
+
+      <div class="toolbar" style="justify-content:flex-end;margin-top:20px">
+        <a class="btn btn-secondary" href="/admin/manajemen-ruangan">Batal</a>
+        <button class="btn btn-primary" type="submit" th:text="${studio != null ? 'Simpan Perubahan Studio &rarr;' : 'Lanjut ke Setup Kursi &rarr;'}">Lanjut ke Setup Kursi &rarr;</button>
+      </div>
+    </form>
+  </section>
+
+  <!-- Modal Tambah Tipe -->
+  <div id="modal-tipe" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+      <div class="card" style="width:360px; max-width:90%; padding:24px; max-height:80vh; overflow-y:auto; background:var(--color-bg-elevated); color:var(--color-text-primary); border:1px solid var(--color-border-strong); border-radius:var(--radius-lg); box-shadow:var(--shadow-xl);">
+          <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">Kelola Tipe Studio</h3>
+          
+          <div style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:15px;">
+              <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;" id="list-tipe-modal">
+                  <li th:each="tipe : ${listTipe}" th:id="'tipe-row-' + ${tipe.id}" style="display:flex; justify-content:space-between; align-items:center; background:#2a2a40; padding:8px 12px; border-radius:6px; border:1px solid #3d3d5c;">
+                      <span th:text="${tipe.nama}"></span>
+                      <button type="button" class="btn badge-danger" style="padding:2px 6px; font-size:10px; cursor:pointer;" th:onclick="'deleteTipe(' + ${tipe.id} + ')'">Hapus</button>
+                  </li>
+                  <li th:if="${listTipe.empty}" class="muted" style="font-size:12px; text-align:center;">Belum ada tipe.</li>
+              </ul>
+          </div>
+          
+          <p style="font-size:12px; margin-bottom:5px;"><strong>Tambah Baru:</strong></p>
+          <div style="display:flex; gap:5px;">
+              <input type="text" id="new-tipe-name" class="input" placeholder="Nama Tipe Baru" style="flex:1;">
+              <button class="btn btn-primary" onclick="addTipe()">Tambah</button>
+          </div>
+          
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('modal-tipe').style.display='none'">Tutup</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- Modal Tambah Fasilitas -->
+  <div id="modal-fasilitas" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; align-items:center; justify-content:center; backdrop-filter: blur(4px);">
+      <div class="card" style="width:360px; max-width:90%; padding:24px; max-height:80vh; overflow-y:auto; background:var(--color-bg-elevated); color:var(--color-text-primary); border:1px solid var(--color-border-strong); border-radius:var(--radius-lg); box-shadow:var(--shadow-xl);">
+          <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">Kelola Fasilitas</h3>
+          
+          <div style="margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:15px;">
+              <ul style="list-style:none; padding:0; margin:0; display:flex; flex-direction:column; gap:8px;" id="list-fasilitas-modal">
+                  <li th:each="f : ${listFasilitas}" th:id="'fasilitas-row-' + ${f.id}" style="display:flex; justify-content:space-between; align-items:center; background:#2a2a40; padding:8px 12px; border-radius:6px; border:1px solid #3d3d5c;">
+                      <span th:text="${f.nama}"></span>
+                      <button type="button" class="btn badge-danger" style="padding:2px 6px; font-size:10px; cursor:pointer;" th:onclick="'deleteFasilitas(' + ${f.id} + ')'">Hapus</button>
+                  </li>
+                  <li th:if="${listFasilitas.empty}" class="muted" style="font-size:12px; text-align:center;">Belum ada fasilitas.</li>
+              </ul>
+          </div>
+          
+          <p style="font-size:12px; margin-bottom:5px;"><strong>Tambah Baru:</strong></p>
+          <div style="display:flex; gap:5px;">
+              <input type="text" id="new-fasilitas-name" class="input" placeholder="Nama Fasilitas" style="flex:1;">
+              <button class="btn btn-primary" onclick="addFasilitas()">Tambah</button>
+          </div>
+          
+          <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:20px;">
+              <button class="btn btn-secondary" onclick="document.getElementById('modal-fasilitas').style.display='none'">Tutup</button>
+          </div>
+      </div>
+  </div>
+
+  <script>
+      function showToast(message, isError = true) {
+          const toast = document.createElement('div');
+          toast.style.cssText = `position:fixed; bottom:20px; right:20px; padding:12px 20px; border-radius:6px; color:#fff; font-size:14px; z-index:9999; transition: opacity 0.3s; background-color: ${isError ? '#dc3545' : '#28a745'}; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
+          toast.innerText = message;
+          document.body.appendChild(toast);
+          setTimeout(() => {
+              toast.style.opacity = '0';
+              setTimeout(() => toast.remove(), 300);
+          }, 5000);
+      }
+
+      function addTipe() {
+          const name = document.getElementById('new-tipe-name').value;
+          if(!name) {
+              alert('Nama Tipe Studio tidak boleh kosong!');
+              return;
+          }
+          const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+          const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+          fetch('/admin/api/tipe-studio', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  [csrfHeader]: csrfToken
+              },
+              body: 'nama=' + encodeURIComponent(name)
+          })
+          .then(async res => {
+              const data = await res.json();
+              if(!res.ok) throw new Error(data.message || 'Gagal menambahkan Tipe Studio');
+              return data;
+          })
+          .then(data => {
+              // Tambah ke select
+              const select = document.getElementById('room-type');
+              const opt = document.createElement('option');
+              opt.value = data.id;
+              opt.text = data.nama;
+              opt.selected = true;
+              select.appendChild(opt);
+              
+              // Tambah ke modal list
+              const ul = document.getElementById('list-tipe-modal');
+              if(ul.querySelector('.muted')) ul.innerHTML = ''; // Hapus 'Belum ada'
+              const li = document.createElement('li');
+              li.id = 'tipe-row-' + data.id;
+              li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#2a2a40; padding:8px 12px; border-radius:6px; border:1px solid #3d3d5c;';
+              li.innerHTML = `<span>${data.nama}</span> <button type="button" class="btn badge-danger" style="padding:2px 6px; font-size:10px; cursor:pointer;" onclick="deleteTipe(${data.id})">Hapus</button>`;
+              ul.appendChild(li);
+              
+              document.getElementById('new-tipe-name').value = '';
+          })
+          .catch(err => alert(err.message));
+      }
+
+      function deleteTipe(id) {
+          if(!confirm('Hapus permanen tipe ini dari daftar?')) return;
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch('/admin/api/tipe-studio/' + id, { 
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            })
+          .then(async res => {
+              if(res.ok) {
+                  // Hapus dari modal
+                  document.getElementById('tipe-row-' + id).remove();
+                  // Hapus dari select
+                  const select = document.getElementById('room-type');
+                  for(let i=0; i<select.options.length; i++){
+                      if(select.options[i].value == id) {
+                          select.remove(i);
+                          if(select.value === "") {
+                              alert("Peringatan: Tipe Studio yang sedang digunakan pada form ini baru saja dihapus. Silakan pilih tipe lain agar dapat disimpan.");
+                          }
+                          break;
+                      }
+                  }
+                  showToast('Tipe Studio berhasil dihapus.', false);
+              } else {
+                  try { 
+                      const data = await res.json(); 
+                      if (data.error === 'in_use') {
+                          showToast(data.message);
+                      } else {
+                          showToast(data.message || 'Gagal menghapus tipe studio');
+                      }
+                  } catch(e) { showToast('Terjadi kesalahan saat menghapus tipe studio.'); }
+              }
+          });
+      }
+
+      function addFasilitas() {
+          const name = document.getElementById('new-fasilitas-name').value;
+          if(!name) {
+              alert('Nama Fasilitas tidak boleh kosong!');
+              return;
+          }
+          const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+          const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+          fetch('/admin/api/fasilitas', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded',
+                  [csrfHeader]: csrfToken
+              },
+              body: 'nama=' + encodeURIComponent(name)
+          })
+          .then(async res => {
+              const data = await res.json();
+              if(!res.ok) throw new Error(data.message || 'Gagal menambahkan Fasilitas');
+              return data;
+          })
+          .then(data => {
+              // Tambah ke checkbox
+              const container = document.getElementById('fasilitas-container');
+              if(container.querySelector('.muted')) container.innerHTML = '';
+              const lbl = document.createElement('label');
+              lbl.id = 'fasilitas-cb-' + data.id;
+              lbl.style.cssText = 'display:flex;align-items:center;gap:8px';
+              lbl.innerHTML = `<input type="checkbox" name="fasilitasIds" value="${data.id}" checked> <span>${data.nama}</span>`;
+              container.appendChild(lbl);
+              
+              // Tambah ke modal list
+              const ul = document.getElementById('list-fasilitas-modal');
+              if(ul.querySelector('.muted')) ul.innerHTML = '';
+              const li = document.createElement('li');
+              li.id = 'fasilitas-row-' + data.id;
+              li.style.cssText = 'display:flex; justify-content:space-between; align-items:center; background:#2a2a40; padding:8px 12px; border-radius:6px; border:1px solid #3d3d5c;';
+              li.innerHTML = `<span>${data.nama}</span> <button type="button" class="btn badge-danger" style="padding:2px 6px; font-size:10px; cursor:pointer;" onclick="deleteFasilitas(${data.id})">Hapus</button>`;
+              ul.appendChild(li);
+              
+              document.getElementById('new-fasilitas-name').value = '';
+          })
+          .catch(err => alert(err.message));
+      }
+
+      function deleteFasilitas(id) {
+          if(!confirm('Hapus permanen fasilitas ini dari daftar?')) return;
+            const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]').getAttribute('content');
+            
+            fetch('/admin/api/fasilitas/' + id, { 
+                method: 'DELETE',
+                headers: { [csrfHeader]: csrfToken }
+            })
+          .then(async res => {
+              if(res.ok) {
+                  document.getElementById('fasilitas-row-' + id).remove();
+                  const cb = document.getElementById('fasilitas-cb-' + id);
+                  if(cb) {
+                      cb.remove();
+                  } else {
+                      const input = document.querySelector('input[name="fasilitasIds"][value="' + id + '"]');
+                      if(input) input.parentElement.remove();
+                  }
+                  showToast('Fasilitas berhasil dihapus.', false);
+              } else {
+                  try { 
+                      const data = await res.json(); 
+                      if (data.error === 'in_use') {
+                          showToast(data.message);
+                      } else {
+                          showToast(data.message || 'Gagal menghapus fasilitas');
+                      }
+                  } catch(e) { showToast('Terjadi kesalahan saat menghapus fasilitas.'); }
+              }
+          });
+      }
+  </script>
+</body>
+</html>
+

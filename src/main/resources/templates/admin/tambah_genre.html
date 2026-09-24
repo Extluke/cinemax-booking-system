@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${genre != null ? 'Edit Genre | Admin Cineplex' : 'Tambah Genre | Admin Cineplex'}">Tambah Genre</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('genre')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Master Data / Genre', ${genre != null ? 'Edit Genre' : 'Tambah Genre'})}"></div>
+
+      <main class="content">
+        <!-- Notifications -->
+        <div th:if="${param.error != null and param.error[0] == 'duplicate'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Gagal Disimpan!</strong> Genre dengan nama tersebut sudah ada.
+        </div>
+
+        <section class="card form-panel">
+          <form th:action="${genre != null ? '/admin/edit-genre' : '/admin/tambah-genre'}" method="post">
+            <input type="hidden" name="id" th:if="${genre != null}" th:value="${genre.id}">
+            <div class="form-group">
+              <label>Nama Genre</label>
+              <input type="text" name="nama" class="input" placeholder="Contoh: Action, Komedi, Thriller" th:value="${genre != null ? genre.nama : ''}" required>
+            </div>
+            
+            <div class="form-actions" style="margin-top:20px;display:flex;gap:10px">
+              <button type="submit" class="btn btn-primary" th:text="${genre != null ? 'Simpan Perubahan' : 'Simpan Genre'}">Simpan Genre</button>
+              <a class="btn btn-secondary" href="/admin/manajemen-genre">Batal</a>
+            </div>
+          </form>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>

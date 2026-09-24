@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Detail Transaksi ORD-9C2A-18F4 | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="content" style="max-width:1080px;margin:0 auto">
+    <div class="page-head">
+      <div>
+        <a class="brand" href="/admin/dashboard" style="padding:0 0 8px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+        <p class="muted">Transaksi / Rincian Pesanan</p>
+        <h1 class="mono" style="font-size:clamp(1.25rem, 2.5vw, 1.75rem)">ORD-9C2A-18F4</h1>
+      </div>
+      <div class="toolbar">
+        <span class="badge badge-success" style="font-size:13px;padding:6px 12px">Lunas (Settlement)</span>
+        <a class="btn btn-secondary" href="/admin/manajemen-transaksi">← Kembali ke Transaksi</a>
+      </div>
+    </div>
+
+    <div class="grid grid-2" style="align-items:start">
+      <!-- Info Pesanan -->
+      <section class="card">
+        <h3>Informasi Tiket & Pertunjukan</h3>
+        <hr>
+        <div class="stat-list">
+          <div>
+            <span>Nama Pembeli</span>
+            <strong>Rina Wijaya (Member)</strong>
+          </div>
+          <div>
+            <span>Email Terdaftar</span>
+            <span>rina@email.com</span>
+          </div>
+          <div>
+            <span>Judul Film</span>
+            <strong>Midnight Signal</strong>
+          </div>
+          <div>
+            <span>Jadwal Penayangan</span>
+            <strong>19 Sep 2026 · 14:00 WIB</strong>
+          </div>
+          <div>
+            <span>Studio Bioskop</span>
+            <strong>Studio 1 (Regular)</strong>
+          </div>
+          <div>
+            <span>Kursi Dipilih</span>
+            <strong style="color:var(--color-primary)">A7, A8</strong>
+          </div>
+          <div style="font-size:15px;padding-top:10px">
+            <strong>Total Nominal</strong>
+            <strong style="font-size:18px">Rp140.000</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Info Gateway & Refund -->
+      <section class="card">
+        <h3>Detail Gateway Pembayaran</h3>
+        <hr>
+        <div class="stat-list">
+          <div>
+            <span>Payment Gateway</span>
+            <strong>Payment Gateway API</strong>
+          </div>
+          <div>
+            <span>Metode Bayar</span>
+            <strong>QRIS (Gopay / BCA)</strong>
+          </div>
+          <div>
+            <span>Transaction ID</span>
+            <span class="mono">MTR-98214-7712-A</span>
+          </div>
+          <div>
+            <span>Waktu Sukses</span>
+            <strong>19 Sep 2026 · 10:32:15 WIB</strong>
+          </div>
+        </div>
+
+        <hr>
+        
+        <h3>Opsi Pengembalian Dana (Refund)</h3>
+        <p class="muted" style="font-size:12.5px;margin-top:6px">Refund hanya dapat diproses maksimal 2 jam sebelum jadwal film dimulai.</p>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn btn-danger" type="button" onclick="confirm('Yakin ingin memproses refund untuk transaksi ini?')">Proses Refund Dana</button>
+          <button class="btn btn-secondary" type="button" onclick="window.print()">Cetak Resi</button>
+        </div>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
+

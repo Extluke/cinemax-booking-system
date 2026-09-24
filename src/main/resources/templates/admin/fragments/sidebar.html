@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+    <aside class="sidebar" th:fragment="sidebar(activePage)">
+      <a class="brand" href="/admin/dashboard"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+      <nav>
+        <div class="nav-label">Overview</div>
+        <a class="nav-item" th:classappend="${activePage == 'dashboard'} ? 'active' : ''" href="/admin/dashboard">📊 Dashboard</a>
+        <a class="nav-item" th:classappend="${activePage == 'laporan'} ? 'active' : ''" href="/admin/laporan" sec:authorize="hasRole('SUPER_ADMIN')">📈 Laporan Pendapatan</a>
+        <div class="nav-label">Operasional</div>
+        <a class="nav-item" th:classappend="${activePage == 'film'} ? 'active' : ''" href="/admin/manajemen-film">🎬 Film</a>
+        <a class="nav-item" th:classappend="${activePage == 'genre'} ? 'active' : ''" href="/admin/manajemen-genre">🏷️ Genre</a>
+        <a class="nav-item" th:classappend="${activePage == 'jadwal'} ? 'active' : ''" href="/admin/manajemen-jadwal">⏱ Jadwal</a>
+        <a class="nav-item" th:classappend="${activePage == 'ruangan'} ? 'active' : ''" href="/admin/manajemen-ruangan">🛋️ Fasilitas & Studio</a>
+        <a class="nav-item" th:classappend="${activePage == 'transaksi'} ? 'active' : ''" href="/admin/manajemen-transaksi">💳 Transaksi</a>
+        <a class="nav-item" th:classappend="${activePage == 'refund'} ? 'active' : ''" href="/admin/refunds">💸 Refund</a>
+        <div class="nav-label">Pemasaran</div>
+        <a class="nav-item" th:classappend="${activePage == 'promosi'} ? 'active' : ''" href="/admin/manajemen-promosi">📢 Promo & Banner</a>
+        <div sec:authorize="hasRole('SUPER_ADMIN')">
+          <div class="nav-label">Sistem</div>
+          <a class="nav-item" th:classappend="${activePage == 'audit'} ? 'active' : ''" href="/admin/audit-log">📋 Audit Log</a>
+          <a class="nav-item" th:classappend="${activePage == 'staf'} ? 'active' : ''" href="/admin/staf">👥 Manajemen Staf</a>
+          <a class="nav-item" th:classappend="${activePage == 'pengaturan'} ? 'active' : ''" href="/admin/pengaturan">⚙ Pengaturan</a>
+        </div>
+      </nav>
+    </aside>
+</body>
+</html>

@@ -1,0 +1,91 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilih Kursi — Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <div style="text-align:center">
+      <strong>Midnight Signal</strong><br>
+      <span class="muted" style="font-size:12px">Studio 1 · 19 Sep 2026</span>
+    </div>
+    <span class="badge badge-info">Langkah 2/3</span>
+  </header>
+
+  <main class="user-content seat-layout">
+    <div class="page-head">
+      <div>
+        <h1>Pilih Kursi</h1>
+        <p class="muted">Pilih kursi terbaik untuk pengalaman menontonmu.</p>
+      </div>
+    </div>
+
+    <section class="card">
+      <div class="seat-hint">← Geser layar untuk melihat posisi seluruh kursi →</div>
+      <div class="seat-scroll-wrap">
+        <div class="screen">LAYAR BIOSKOP</div>
+        <div class="seat-grid" role="region" aria-label="Layout Kursi Bioskop">
+          <i class="seat walkway" aria-hidden="true"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi A2 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi A3 Regular"></i>
+          <i class="seat occupied" aria-label="Kursi A4 Terisi"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi A5 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi A6 Regular"></i>
+          <i class="seat sweetbox selected" tabindex="0" role="button" aria-label="Kursi Sweetbox B1-B2 Dipilih"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi B3 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi B4 Regular"></i>
+          <i class="seat occupied" aria-label="Kursi B5 Terisi"></i>
+          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere C1"></i>
+          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere C2"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi C3 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi C4 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi D1 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi D2 Regular"></i>
+          <i class="seat occupied" aria-label="Kursi D3 Terisi"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi D4 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi D5 Regular"></i>
+          <i class="seat sweetbox" tabindex="0" role="button" aria-label="Kursi Sweetbox E1-E2"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi E3 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi E4 Regular"></i>
+          <i class="seat occupied" aria-label="Kursi E5 Terisi"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi F1 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi F2 Regular"></i>
+          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere F3"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi G1 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi G2 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi G3 Regular"></i>
+          <i class="seat occupied" aria-label="Kursi G4 Terisi"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi H1 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi H2 Regular"></i>
+          <i class="seat" tabindex="0" role="button" aria-label="Kursi H3 Regular"></i>
+          <i class="seat sweetbox" tabindex="0" role="button" aria-label="Kursi Sweetbox H4-H5"></i>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Sticky Bottom Checkout Bar with Mobile Support -->
+  <aside class="checkout-bar" aria-label="Ringkasan Pesanan Kursi">
+    <div class="legend">
+      <span class="legend-item"><i class="swatch"></i> Reguler</span>
+      <span class="legend-item"><i class="swatch sweet"></i> Sweetbox</span>
+      <span class="legend-item"><i class="swatch premiere"></i> Premiere</span>
+      <span class="legend-item"><i class="swatch empty"></i> Terisi</span>
+      <span class="legend-item"><i class="swatch" style="background:var(--color-primary)"></i> Dipilih</span>
+    </div>
+    <div>
+      <span class="warning-box">⏱ 09:59</span>
+      <div style="text-align:right">
+        <span class="muted" style="font-size:11px;display:block">Total Pembayaran</span>
+        <strong>Rp70.000</strong>
+      </div>
+      <a class="btn btn-primary" href="/faktur">Lanjut Checkout →</a>
+    </div>
+  </aside>
+</body>
+</html>
+

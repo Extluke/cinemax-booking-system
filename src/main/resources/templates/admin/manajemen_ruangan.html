@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Ruangan & Studio | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('ruangan')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Master Data / Fasilitas', 'Manajemen Ruangan')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Daftar Studio Bioskop</h1>
+            <p class="muted">Kelola kapasitas kursi, fasilitas audio visual, dan status operasional masing-masing studio.</p>
+          </div>
+          <a class="btn btn-primary" href="/admin/tambah-ruangan">+ Tambah Studio Baru</a>
+        </div>
+
+        <!-- Notifications -->
+        <div th:if="${param.success}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Berhasil!</strong> Data ruangan berhasil disimpan.
+        </div>
+        <div th:if="${param.deleted}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Dihapus!</strong> Studio berhasil diarsipkan dan ditutup.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'in_use'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Gagal Dihapus!</strong> Studio tidak dapat diarsipkan karena masih digunakan oleh satu atau lebih jadwal tayang yang aktif.
+        </div>
+
+        <form class="filters" method="get" action="/admin/manajemen-ruangan" style="display:flex; gap:12px; margin-bottom:20px;">
+          <input class="input" type="search" name="search" th:value="${currentSearch}" placeholder="Cari nama studio...">
+          <select class="select" name="status" onchange="this.form.submit()">
+            <option th:selected="${currentStatus == 'Semua Status' || currentStatus == null}">Semua Status</option>
+            <option th:selected="${currentStatus == 'Aktif Beroperasi'}">Aktif Beroperasi</option>
+            <option th:selected="${currentStatus == 'Dalam Pemeliharaan (Renovasi)'}">Dalam Pemeliharaan (Renovasi)</option>
+            <option th:selected="${currentStatus == 'Ditutup'}">Ditutup</option>
+          </select>
+          <button type="submit" style="display:none"></button>
+          <a href="/admin/manajemen-ruangan" class="btn btn-secondary" style="padding: 8px 16px;">Reset</a>
+        </form>
+
+        <section class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nama Studio & Tipe</th>
+                <th>Kapasitas Kursi</th>
+                <th>Fasilitas Utama</th>
+                <th>Status</th>
+                <th class="right">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Loop Data Studio -->
+              <tr th:each="studio : ${studios}">
+                <td>
+                  <strong th:text="${studio.nama}">Nama Studio</strong><br>
+                  <span class="muted" style="font-size:12px" th:text="${studio.tipe != null ? studio.tipe.nama : '-'}">Tipe Studio</span>
+                </td>
+                <td><strong th:text="${studio.kapasitas + ' Kursi'}">0 Kursi</strong> <span th:text="${'(' + (studio.jumlahBaris != null ? studio.jumlahBaris : 0) + ' Baris)'}">(0 Baris)</span></td>
+                <td>
+                  <span th:if="${studio.fasilitas.empty}">-</span>
+                  <span th:each="f, stat : ${studio.fasilitas}" th:text="${f.nama} + (${!stat.last} ? ', ' : '')"></span>
+                </td>
+                <td>
+                  <span th:if="${studio.status?.name() == 'AKTIF'}" class="badge badge-success">Aktif</span>
+                  <span th:if="${studio.status?.name() == 'RENOVASI'}" class="badge badge-warning">Renovasi</span>
+                  <span th:if="${studio.status?.name() == 'DITUTUP'}" class="badge badge-danger">Ditutup</span>
+                  <span th:if="${studio.status == null}" class="badge badge-secondary">-</span>
+                </td>
+                <td class="right">
+                  <div class="toolbar" style="justify-content:flex-end; gap:8px;">
+                    <a class="btn btn-secondary" style="padding:6px 12px;font-size:12.5px" th:href="@{/admin/edit-ruangan(id=${studio.id})}">Edit</a>
+                    <a class="btn btn-primary" style="padding:6px 12px;font-size:12.5px" th:href="@{/admin/manajemen-kursi(studioId=${studio.id})}">Kelola Kursi</a>
+                    <form method="post" th:action="@{/admin/hapus-ruangan}" onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan studio ini? Semua kursi di dalamnya tidak akan terhapus namun studio ini tidak akan bisa diakses lagi.');" style="margin:0;">
+                      <input type="hidden" name="id" th:value="${studio.id}">
+                      <button type="submit" class="btn badge-danger" style="padding:6px 12px;font-size:12.5px;cursor:pointer;">Hapus</button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              
+              <!-- State Kosong -->
+              <tr th:if="${studios.empty}">
+                <td colspan="5" style="text-align:center; padding: 40px; color: #888;">
+                  Belum ada data studio.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
+

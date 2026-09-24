@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audit Log Sistem | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('audit')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Sistem', 'Audit Log')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Catatan Audit Sistem</h1>
+            <p class="muted">Rekam jejak seluruh aktivitas perubahan data, transaksi, dan login petugas bioskop.</p>
+          </div>
+          <a class="btn btn-secondary" href="/admin/audit-log/export">Export CSV</a>
+        </div>
+
+        <form class="filters" method="get" action="/admin/audit-log">
+          <input class="input" type="search" name="search" th:value="${currentSearch}" placeholder="Filter aktivitas / nama admin...">
+          <select class="select" name="aksi">
+            <option th:selected="${currentAksi == 'Semua Aksi' or currentAksi == null}">Semua Aksi</option>
+            <option th:selected="${currentAksi == 'CREATE (Tambah)'}">CREATE (Tambah)</option>
+            <option th:selected="${currentAksi == 'UPDATE (Ubah)'}">UPDATE (Ubah)</option>
+            <option th:selected="${currentAksi == 'DELETE (Hapus)'}">DELETE (Hapus)</option>
+            <option th:selected="${currentAksi == 'LOGIN'}">LOGIN</option>
+          </select>
+          <input class="input" type="date" name="tanggal" th:value="${currentTanggal}" style="max-width:180px">
+          <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Terapkan</button>
+          <a href="/admin/audit-log" class="btn btn-secondary" style="padding: 8px 16px;">Reset</a>
+        </form>
+
+        <section class="card table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Waktu Kejadian</th>
+                <th>Admin Pelaksana</th>
+                <th>Tindakan (Action)</th>
+                <th>Objek Sasaran</th>
+                <th>Alamat IP</th>
+                <th>Keterangan</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr th:if="${#lists.isEmpty(logs)}">
+                <td colspan="6" style="text-align:center; padding:20px; color:#6b7280;">Tidak ada log aktivitas yang ditemukan.</td>
+              </tr>
+              <tr th:each="log : ${logs}">
+                <td th:text="${#temporals.format(log.waktuKejadian, 'dd MMM yyyy HH:mm:ss')}">19 Sep 2026 10:32:11</td>
+                <td><strong th:text="${log.adminPelaksana}">Andi Rahman</strong></td>
+                <td>
+                  <span class="badge badge-success" th:if="${log.aksi.name() == 'CREATE'}">CREATE</span>
+                  <span class="badge badge-info" th:if="${log.aksi.name() == 'UPDATE'}">UPDATE</span>
+                  <span class="badge badge-danger" th:if="${log.aksi.name() == 'DELETE'}">DELETE</span>
+                  <span class="badge" style="background:#4b5563; color:white;" th:if="${log.aksi.name() == 'LOGIN'}">LOGIN</span>
+                </td>
+                <td th:text="${log.objekSasaran}">Jadwal #SCH-218</td>
+                <td class="mono" th:text="${log.ipAddress}">10.24.0.18</td>
+                <td class="muted" th:text="${log.keterangan}">Mengubah harga tiket Studio 1</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
+

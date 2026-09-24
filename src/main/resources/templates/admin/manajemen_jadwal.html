@@ -1,0 +1,375 @@
+﻿<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Jadwal | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .status-aktif { background: #0d6efd !important; color: white !important; }
+    .status-draft { background: #fd7e14 !important; color: white !important; }
+    .status-sedang_tayang { background: #dc3545 !important; color: white !important; font-weight: bold; border-color: #fff !important; }
+    .status-selesai { background: #198754 !important; color: white !important; }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('jadwal')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Operasional / Jadwal', 'Manajemen Jadwal')}"></div>
+
+      <main class="content">
+        <div class="page-head">
+          <div>
+            <h1>Timeline Jadwal Tayang</h1>
+            <p class="muted">Atur alokasi jam tayang antar studio dan pantau potensi tabrakan jam pemutaran.</p>
+          </div>
+          <button class="btn btn-primary" onclick="openAddForm()" th:if="${!isTutup}">+ Tambah Jadwal Tayang</button>
+        </div>
+
+        <!-- Notifications -->
+        <div th:if="${param.configSuccess}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Berhasil!</strong> Konfigurasi Jam Buka & Tutup berhasil diperbarui.
+        </div>
+        <div th:if="${param.success}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Berhasil!</strong> Jadwal tayang telah disimpan dan diterbitkan.
+        </div>
+        <div th:if="${param.deleted != null}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Dibatalkan!</strong> Jadwal tayang berhasil dibatalkan / dihapus.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'conflict'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Gagal Menyimpan!</strong> Jadwal bertabrakan dengan waktu penayangan film lain di studio tersebut.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'out_of_hours'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Di Luar Jam Operasional!</strong> Waktu penayangan film harus sepenuhnya berada di dalam jam operasional bioskop (jadwal tidak disimpan).
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'past_time'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Waktu Tidak Valid!</strong> Tidak dapat membuat jadwal dengan waktu mulai yang sudah berlalu (jadwal tidak disimpan).
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'locked'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Akses Ditolak!</strong> Jadwal tidak dapat diedit karena sudah Selesai, Sedang Tayang, atau kurang dari 10 menit sebelum waktu tayang.
+        </div>
+        <div th:if="${param.error != null and param.error[0] == 'invalid'}" style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+          <strong>Gagal!</strong> Data film atau studio tidak valid.
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="filters" style="display:flex; gap:24px; align-items:center; flex-wrap:wrap; margin-bottom:16px;">
+          <!-- Filter Tanggal & Studio -->
+          <form method="get" action="/admin/manajemen-jadwal" style="display:flex; gap:12px; align-items:center;">
+              <input class="input" name="date" type="date" th:value="${currentDate}" style="max-width:180px" onchange="this.form.submit()">
+              <select class="select" name="studioId" style="max-width:180px" onchange="this.form.submit()">
+                <option value="">Semua Studio</option>
+                <option th:each="s : ${allStudios}" th:value="${s.id}" th:text="${s.nama}" th:selected="${currentStudioId != null and currentStudioId == s.id}"></option>
+              </select>
+          </form>
+          
+          <!-- Pemisah -->
+          <div style="height:24px; width:1px; background-color:var(--color-border);"></div>
+
+          <!-- Info Jam Operasional -->
+          <div style="display:flex; align-items:center;">
+              <div style="font-size:13px; color:var(--color-text-muted)">
+                  <i style="font-style:italic">Untuk mengubah jam buka/tutup bioskop, silakan cek di menu <a href="/admin/pengaturan" style="color:var(--color-primary);text-decoration:none;">Pengaturan</a>.</i>
+              </div>
+          </div>
+        </div>
+        <section class="card">
+          <div class="page-head" style="margin-bottom:12px">
+            <div>
+              <h3>Matriks Waktu Penayangan (<span th:text="${#temporals.format(T(java.time.LocalDate).parse(currentDate), 'dd MMM yyyy')}">19 Sep 2026</span>)</h3>
+              <p class="muted" style="font-size:12px" th:if="${!isTutup}">Garis merah menandakan waktu saat ini (Real-time marker). Skala: <span th:text="${bukaTime}">06:00</span> - <span th:text="${tutupTime}">22:00</span> (<span th:text="${totalTimelineMinutes / 60}">16</span> Jam).</p>
+              <p class="muted" style="font-size:12px; color:var(--color-danger);" th:if="${isTutup}">Bioskop tidak beroperasi pada hari ini.</p>
+            </div>
+            <div class="legend">
+              <span class="legend-item"><i class="swatch" style="background:var(--color-bg-elevated);border:1px solid var(--color-border-strong)"></i> Normal</span>
+              <span class="legend-item"><i class="swatch" style="background:var(--color-danger)"></i> Konflik Jadwal</span>
+            </div>
+          </div>
+
+          <div class="seat-hint">â† Geser timeline secara horizontal untuk melihat jam tayang malam â†’</div>
+
+          <!-- Horizontal Scroll Container for Timeline -->
+          <div class="timeline-scroll-wrap" th:if="${!isTutup}">
+            <div style="min-width:1400px; padding: 10px 0;">
+              
+              <div class="timeline" style="position:relative; row-gap: 16px;">
+                
+                <!-- HEADER ROW -->
+                <div><!-- Spacer for studio col --></div>
+                <div style="position:relative; height:45px;">
+                  <!-- Hour Labels -->
+                  <div th:each="lbl, stat : ${timeLabels}"
+                       th:style="|position:absolute; top:0; bottom:0; left:${stat.index * 60.0 / totalTimelineMinutes * 100}%; width:40px; margin-left:-20px; display:flex; justify-content:center; align-items:flex-end; padding-bottom:4px;|">
+                      <strong style="font-size:13px; color:var(--color-text-main);" th:text="${lbl}">06:00</strong>
+                  </div>
+                </div>
+
+                <!-- STUDIO ROWS -->
+                <th:block th:each="entry : ${jadwalMap}">
+                    <div style="position:relative; z-index:1;">
+                      <strong th:text="${entry.key.nama}">Studio 1</strong><br>
+                      <small class="muted" th:text="${entry.key.tipe != null ? entry.key.tipe.nama : 'Regular'}">Regular 2D</small>
+                    </div>
+                    
+                    <div class="timeline-row" th:id="'timeline-row-' + ${entry.key.id}" style="position:relative; z-index:1; background:transparent; border:none; height: 74px; border-radius:0;">
+                      
+                      <!-- Hour Box Backgrounds per Row (replaces the hardcoded repeating gradient) -->
+                      <div style="position:absolute; top:0; bottom:0; left:0; right:0; pointer-events:none; z-index:0;">
+                         <div th:each="lbl, stat : ${timeLabels}" th:if="${stat.index < timeLabels.size() - 1}"
+                              th:style="|position:absolute; top:0; bottom:0; left:${stat.index * 60.0 / totalTimelineMinutes * 100}%; width:${60.0 / totalTimelineMinutes * 100}%; border-left: 1px dashed rgba(255,255,255,0.1); border-right: 1px dashed rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); box-sizing: border-box;|"></div>
+                      </div>
+
+                      <!-- Looping Blok Jadwal -->
+                      <a href="javascript:void(0)" th:each="j : ${entry.value}" 
+                           th:data-id="${j.id}"
+                           th:data-film-id="${j.filmId}"
+                           th:data-film-judul="${j.filmJudul}"
+                           th:data-studio-id="${j.studioId}"
+                           th:data-waktu="${j.waktuMulaiStr}"
+                           th:data-harga="${j.harga != null ? j.harga : 0}"
+                           th:data-status="${j.status}"
+                           onclick="openEditForm(this.getAttribute('data-id'), this.getAttribute('data-film-id'), this.getAttribute('data-film-judul'), this.getAttribute('data-studio-id'), this.getAttribute('data-waktu'), this.getAttribute('data-harga'), this.getAttribute('data-status'))"
+                           th:class="|show-block ${j.isConflict ? 'conflict' : 'status-' + #strings.toLowerCase(j.status)}|" 
+                           th:style="|left:${j.leftPercentage}%; width:${j.widthPercentage}%; text-decoration:none; color:inherit; border: 1px solid ${j.isConflict ? 'var(--color-danger)' : 'transparent'}; z-index:2;|" 
+                           th:title="|Klik untuk edit. ${j.isConflict ? 'Peringatan: ' + j.conflictReason : ''}|">
+                        <strong th:text="${j.filmJudul}">Film</strong><br>
+                        <small th:text="|${j.waktuMulaiStr} â€” ${j.waktuSelesaiStr}${j.isConflict ? ' âš ï¸ ' + j.conflictReason : ''}|">10:00 - 12:00</small>
+                      </a>
+                      
+                      <!-- Penanda Waktu Saat Ini -->
+                      <div th:if="${nowLeft != null}" class="time-now" th:style="|left:${nowLeft}%; z-index:3;|" th:title="|Waktu Saat Ini: ${nowTime}|"></div>
+                    </div>
+                </th:block>
+
+                <!-- Pesan kosong jika tidak ada studio -->
+                <div th:if="${jadwalMap.isEmpty()}" style="grid-column: 1 / -1; padding:20px; text-align:center; position:relative; z-index:1;" class="muted">
+                    Tidak ada studio yang ditemukan.
+                </div>
+
+              </div>
+            </div>
+          </div>
+          <div th:if="${isTutup}" style="padding: 48px 24px; text-align: center; background: rgba(0,0,0,0.2); border-radius: 8px; margin-top: 16px;">
+            <h2 style="color: var(--color-danger); margin-bottom: 8px;">Bioskop Tutup</h2>
+            <p class="muted">Berdasarkan pengaturan sistem, bioskop tidak beroperasi pada tanggal ini.</p>
+          </div>
+        </section>
+
+
+
+        <!-- INLINE FORM SECTION -->
+                <section class="card" id="form-section" style="display:none; margin-top:16px; border:1px solid var(--color-primary); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+          <div class="page-head" style="margin-bottom:12px">
+            <div>
+              <h2 id="form-title">Tambah Jadwal Tayang</h2>
+              <p class="muted">Isi detail jadwal. Live Preview akan tampil di matriks utama di atas.</p>
+            </div>
+            <button class="btn btn-secondary" onclick="closeForm()" style="border-radius:50%; width:36px; height:36px; padding:0; display:flex; align-items:center; justify-content:center; font-weight:bold;">&times;</button>
+          </div>
+          
+          <form method="POST" th:action="@{/admin/tambah-jadwal}" id="jadwal-form">
+            <input type="hidden" name="id" id="jadwal-id">
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin-bottom: 15px;">
+              <div class="field" style="margin:0;">
+                <label for="film-select" style="font-size:12px; margin-bottom:4px;">Pilih Film</label>
+                <select class="select" id="film-select" name="filmId" required style="padding:6px; font-size:13px;">
+                  <option value="" disabled selected>-- Pilih Film --</option>
+                  <option th:each="f : ${listFilm}" th:value="${f.id}" th:text="${f.judul + ' (' + f.durasi + ' Menit)'}"></option>
+                </select>
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label for="studio-select" style="font-size:12px; margin-bottom:4px;">Studio Bioskop</label>
+                <select class="select" id="studio-select" name="studioId" required style="padding:6px; font-size:13px;">
+                  <option value="" disabled selected>-- Pilih Studio --</option>
+                  <option th:each="s : ${allStudios}" th:value="${s.id}" th:text="${s.nama + ' (' + (s.tipe != null ? s.tipe.nama : 'Regular') + ' - ' + s.kapasitas + ' Kursi)'}"></option>
+                </select>
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label for="show-date" style="font-size:12px; margin-bottom:4px;">Tanggal</label>
+                <input class="input" id="show-date" name="tanggal" type="date" th:value="${currentDate}" required style="padding:6px; font-size:13px;">
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label for="show-time" style="font-size:12px; margin-bottom:4px;">Jam Mulai</label>
+                <input class="input" id="show-time" name="jam" type="time" required style="padding:6px; font-size:13px;">
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label for="ticket-price" style="font-size:12px; margin-bottom:4px;">Harga (Rp)</label>
+                <input class="input" id="ticket-price" name="harga" type="number" value="35000" required style="padding:6px; font-size:13px;">
+              </div>
+
+              <div class="field" style="margin:0;">
+                <label for="schedule-status" style="font-size:12px; margin-bottom:4px;">Status</label>
+                <select class="select" id="schedule-status" name="status" required style="padding:6px; font-size:13px;">
+                  <option value="AKTIF" selected>Aktif</option>
+                  <option value="DRAFT">Draft</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; border-top:1px solid var(--color-border); padding-top:10px;">
+                <button class="btn btn-danger" type="button" id="btn-delete" style="display:none; padding:6px 12px; font-size:13px;" onclick="if(confirm('Batalkan jadwal tayang ini?')) { document.getElementById('delete-form').submit(); }">Hapus Jadwal</button>
+                <button class="btn btn-primary" type="submit" id="btn-submit" style="padding:6px 12px; font-size:13px; margin-left:auto;">Simpan & Terbitkan Jadwal</button>
+            </div>
+          </form>
+          
+          <form id="delete-form" method="post" th:action="@{/admin/hapus-jadwal}" style="display:none;">
+              <input type="hidden" name="id" id="delete-id">
+          </form>
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <script>
+      const formSection = document.getElementById('form-section');
+      const formTitle = document.getElementById('form-title');
+      const jadwalIdInput = document.getElementById('jadwal-id');
+      const deleteIdInput = document.getElementById('delete-id');
+      const btnDelete = document.getElementById('btn-delete');
+      const btnSubmit = document.getElementById('btn-submit');
+      
+      const filmSelect = document.getElementById('film-select');
+      const studioSelect = document.getElementById('studio-select');
+      const dateInput = document.getElementById('show-date');
+      const timeInput = document.getElementById('show-time');
+      const priceInput = document.getElementById('ticket-price');
+      const statusSelect = document.getElementById('schedule-status');
+
+      function openAddForm() {
+          formTitle.innerText = "Tambah Jadwal Tayang";
+          jadwalIdInput.value = "";
+          deleteIdInput.value = "";
+          btnDelete.style.display = "none";
+          btnSubmit.innerText = "Simpan & Terbitkan Jadwal";
+          
+          filmSelect.value = "";
+          studioSelect.value = "";
+          timeInput.value = "";
+          priceInput.value = "35000";
+          statusSelect.value = "AKTIF";
+          
+          formSection.style.display = "block";
+          
+          updatePreview();
+          formSection.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+
+      function openEditForm(id, filmId, filmJudul, studioId, timeStr, harga, status) {
+          formTitle.innerText = "Edit Jadwal: " + filmJudul;
+          jadwalIdInput.value = id;
+          deleteIdInput.value = id;
+          btnDelete.style.display = "block";
+          btnSubmit.innerText = "Simpan Perubahan";
+          
+          filmSelect.value = filmId;
+          studioSelect.value = studioId;
+          timeInput.value = timeStr;
+          priceInput.value = harga;
+          statusSelect.value = status;
+          
+          formSection.style.display = "block";
+          
+          updatePreview();
+          formSection.scrollIntoView({behavior: 'smooth', block: 'center'});
+      }
+      
+      function closeForm() {
+          formSection.style.display = "none";
+          
+          // Bersihkan live preview dari matriks utama
+          const existingPreview = document.getElementById('live-preview-block');
+          if (existingPreview) {
+              existingPreview.remove();
+          }
+      }
+      
+      function updatePreview() {
+          const filmId = filmSelect.value;
+          const studioId = studioSelect.value;
+          const date = dateInput.value;
+          const time = timeInput.value;
+          const jId = jadwalIdInput.value;
+          
+          // Bersihkan preview sebelumnya
+          const existingPreview = document.getElementById('live-preview-block');
+          if (existingPreview) {
+              existingPreview.remove();
+          }
+
+          if(!filmId || !studioId || !date || !time) {
+              return;
+          }
+          
+          let url = `/admin/api/jadwal-preview?tanggal=${date}&jam=${time}&filmId=${filmId}&studioId=${studioId}`;
+          if(jId) url += `&id=${jId}`;
+          
+          fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(data.error) return;
+                
+                const p = data.proposed;
+                
+                // Cari baris studio di matriks utama
+                const targetRow = document.getElementById('timeline-row-' + studioId);
+                if (targetRow) {
+                    const pBlock = document.createElement('div');
+                    pBlock.id = 'live-preview-block';
+                    pBlock.style.position = 'absolute';
+                    pBlock.style.top = '0';
+                    pBlock.style.bottom = '0';
+                    pBlock.style.borderRadius = '6px';
+                    pBlock.style.padding = '8px';
+                    pBlock.style.zIndex = '10';
+                    pBlock.style.display = 'flex';
+                    pBlock.style.flexDirection = 'column';
+                    pBlock.style.justifyContent = 'center';
+                    pBlock.style.left = p.leftPercentage + '%';
+                    pBlock.style.width = p.widthPercentage + '%';
+                    pBlock.style.boxShadow = '0 4px 12px rgba(0,0,0,0.3)';
+                    pBlock.style.transition = 'all 0.3s';
+                    
+                    if(p.isConflict) {
+                        // Desain khusus overlap
+                        pBlock.style.background = 'repeating-linear-gradient(45deg, rgba(220, 53, 69, 0.8), rgba(220, 53, 69, 0.8) 10px, rgba(220, 53, 69, 1) 10px, rgba(220, 53, 69, 1) 20px)';
+                        pBlock.style.color = '#fff';
+                        pBlock.style.border = '2px solid #dc3545';
+                        pBlock.innerHTML = `<strong>${p.filmJudul} (BENTROK)</strong><small>${p.waktuMulaiStr} â€” ${p.waktuSelesaiStr}</small><small style="background:#fff;color:#dc3545;padding:2px 4px;border-radius:4px;margin-top:4px;font-weight:bold;">${p.conflictReason}</small>`;
+                        
+                        btnSubmit.disabled = true;
+                        btnSubmit.style.opacity = '0.5';
+                    } else {
+                        // Desain aman (hijau/biru)
+                        pBlock.style.background = 'rgba(13, 110, 253, 0.9)';
+                        pBlock.style.color = '#fff';
+                        pBlock.style.border = '2px dashed #fff';
+                        pBlock.innerHTML = `<strong>${p.filmJudul} (PREVIEW)</strong><small>${p.waktuMulaiStr} â€” ${p.waktuSelesaiStr}</small>`;
+                        
+                        btnSubmit.disabled = false;
+                        btnSubmit.style.opacity = '1';
+                    }
+                    
+                    targetRow.appendChild(pBlock);
+                }
+            });
+      }
+      
+      filmSelect.addEventListener('change', updatePreview);
+      studioSelect.addEventListener('change', updatePreview);
+      dateInput.addEventListener('change', updatePreview);
+      timeInput.addEventListener('change', updatePreview);
+  </script>
+</body>
+</html>
+
+
+
+
+

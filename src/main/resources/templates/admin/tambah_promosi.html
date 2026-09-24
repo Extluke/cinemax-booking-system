@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${promosi == null ? 'Tambah Banner Promo' : 'Edit Banner Promo'}">Tambah Banner Promo</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+  <main class="content" style="max-width:960px;margin:0 auto">
+    <div class="page-head">
+      <div>
+        <a class="brand" href="/admin/dashboard" style="padding:0 0 8px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+        <h1 th:text="${promosi == null ? 'Tambah Banner Promo Baru' : 'Edit Banner Promo'}">Tambah Banner Promo Baru</h1>
+        <p class="muted">Unggah poster landscape untuk promosi dan masukkan detail tautannya.</p>
+      </div>
+      <a class="btn btn-secondary" href="/admin/manajemen-promosi">← Batal & Kembali</a>
+    </div>
+
+    <section class="card">
+      <form th:action="${promosi == null ? '/admin/tambah-promosi' : '/admin/edit-promosi'}" method="post" enctype="multipart/form-data" id="promoForm">
+        <input type="hidden" name="id" th:if="${promosi != null}" th:value="${promosi.id}">
+        
+        <!-- Landscape Dropzone -->
+        <div class="dropzone" id="posterDropzone" role="button" tabindex="0" onclick="document.getElementById('posterFile').click()" style="aspect-ratio: 21/9; max-width: 100%; height: auto; min-height: 250px;">
+          <input type="file" id="posterFile" name="posterFile" accept="image/png, image/jpeg, image/webp" style="display:none;" onchange="previewPoster(event)">
+          
+          <div id="posterPlaceholder" th:style="${promosi != null and promosi.posterUrl != null ? 'display:none;' : ''}">
+            <span style="font-size:32px;margin-bottom:8px">🖼️</span>
+            <strong>Klik untuk mengunggah gambar promosi (Landscape)</strong>
+            <span style="font-size:13px">Format: PNG, JPG, WEBP · Rasio disarankan 21:9 atau 16:9 (cth: 1920x800px)</span>
+          </div>
+          
+          <img id="posterPreview" th:src="${promosi != null ? promosi.posterUrl : '#'}" alt="Preview Banner" th:style="${promosi != null and promosi.posterUrl != null ? 'display:block; max-width:100%; height:100%; object-fit:cover;' : 'display:none; max-width:100%; height:100%; object-fit:cover;'}">
+        </div>
+
+        <div class="grid" style="gap:14px; margin-top:24px;">
+          <div class="field">
+            <label for="promo-title">Judul Promosi</label>
+            <input class="input" id="promo-title" name="judul" th:value="${promosi != null ? promosi.judul : ''}" placeholder="Contoh: Beli 1 Gratis 1 Tiket Nonton!" required>
+          </div>
+          <div class="field">
+            <label for="target-url">URL Tujuan (Opsional)</label>
+            <input class="input" id="target-url" name="targetUrl" th:value="${promosi != null ? promosi.targetUrl : ''}" placeholder="Contoh: /film/123 atau https://...">
+            <span style="font-size: 12px; color: var(--color-text-muted);">Di mana pelanggan akan diarahkan ketika mengklik banner ini.</span>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px;">
+            <div class="field">
+              <label for="tanggal-mulai">Tanggal Mulai Penayangan</label>
+              <input type="date" class="input" id="tanggal-mulai" name="tanggalMulai" th:value="${promosi != null ? promosi.tanggalMulai : ''}" required>
+            </div>
+            <div class="field">
+              <label for="tanggal-akhir">Tanggal Berakhir Penayangan</label>
+              <input type="date" class="input" id="tanggal-akhir" name="tanggalAkhir" th:value="${promosi != null ? promosi.tanggalAkhir : ''}" required>
+            </div>
+          </div>
+          
+          <div class="field" style="display:flex; align-items:center; gap:8px;">
+            <input type="checkbox" id="isAktif" name="isAktif" th:checked="${promosi == null or promosi.isAktif}">
+            <label for="isAktif" style="margin:0;">Langsung Aktifkan Banner Ini</label>
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:12px; margin-top:32px; padding-top:20px; border-top:1px solid var(--color-border);">
+          <button type="submit" class="btn btn-primary" style="padding:10px 24px">Simpan Promosi</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script>
+    function previewPoster(event) {
+      const input = event.target;
+      if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          document.getElementById('posterPlaceholder').style.display = 'none';
+          const preview = document.getElementById('posterPreview');
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+        }
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    
+    // Prevent submitting if no file is selected on new promo
+    const form = document.getElementById('promoForm');
+    form.addEventListener('submit', function(e) {
+      const isNew = document.querySelector('input[name="id"]') === null;
+      const fileInput = document.getElementById('posterFile');
+      if (isNew && fileInput.files.length === 0) {
+        e.preventDefault();
+        alert('Harap unggah gambar banner promosi terlebih dahulu!');
+      }
+    });
+  </script>
+</body>
+</html>

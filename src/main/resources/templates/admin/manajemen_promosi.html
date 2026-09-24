@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Manajemen Promosi | Admin Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    /* Carousel Styles */
+    .hero-preview {
+      width: 100%;
+      height: 300px;
+      background: #111;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .carousel-inner {
+      display: flex;
+      height: 100%;
+      transition: transform 0.5s ease;
+    }
+    .carousel-item {
+      min-width: 100%;
+      height: 100%;
+      position: relative;
+    }
+    .carousel-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      opacity: 0.8;
+    }
+    .carousel-caption {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    }
+    .carousel-caption h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .carousel-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(0,0,0,0.5);
+      color: white;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+    .carousel-nav.prev { left: 10px; }
+    .carousel-nav.next { right: 10px; }
+
+    /* List Layout Styles */
+    .promo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .promo-card {
+      display: flex;
+      background: var(--color-surface);
+      border: 1px solid var(--color-border);
+      border-radius: 12px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .promo-card:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      border-color: var(--color-primary);
+    }
+    .promo-img-wrapper {
+      width: 300px;
+      min-width: 300px;
+      background: #eee;
+    }
+    .promo-img-wrapper img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .promo-content {
+      padding: 20px;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .promo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .promo-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 0 0 8px 0;
+      color: var(--color-text);
+    }
+    .promo-meta {
+      font-size: 13px;
+      color: var(--color-text-muted);
+      margin-bottom: 12px;
+      display: flex;
+      gap: 16px;
+    }
+    
+    /* Toggle Switch */
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 24px;
+    }
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 24px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #198754;
+    }
+    input:checked + .slider:before {
+      transform: translateX(20px);
+    }
+
+    .promo-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-shell">
+    <div th:replace="~{admin/fragments/sidebar :: sidebar('promosi')}"></div>
+
+    <div class="main">
+      <div th:replace="~{admin/fragments/topbar :: topbar('Pemasaran / Promo', 'Manajemen Promosi')}"></div>
+
+      <main class="content">
+        <div class="page-head" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <h1>Promosi & Banner</h1>
+          <p class="muted">Kelola poster landscape yang akan tampil di slider halaman utama pengunjung.</p>
+        </div>
+        <a class="btn btn-primary" href="/admin/tambah-promosi">+ Tambah Banner Baru</a>
+      </div>
+
+      <!-- Notifications -->
+      <div th:if="${param.success}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+        <strong>Berhasil!</strong> Banner promo berhasil disimpan.
+      </div>
+      <div th:if="${param.updated}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+        <strong>Berhasil!</strong> Banner promo berhasil diperbarui.
+      </div>
+      <div th:if="${param.deleted}" style="background-color: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; color: #28a745; padding: 12px 16px; border-radius: 6px; margin-bottom: 20px;">
+        <strong>Terhapus!</strong> Banner promo berhasil dihapus dari sistem.
+      </div>
+
+      <!-- Hero Section Preview -->
+      <h3 style="margin-bottom: 12px; font-size: 16px;">Live Preview (Hero Section)</h3>
+      <div class="hero-preview" id="promoCarousel">
+        <div th:if="${#lists.isEmpty(activePromos)}" style="display:flex; height:100%; align-items:center; justify-content:center; color:#888;">
+          Tidak ada promo aktif untuk ditampilkan di Slider.
+        </div>
+        <div class="carousel-inner" id="carouselInner" th:unless="${#lists.isEmpty(activePromos)}">
+          <div class="carousel-item" th:each="promo : ${activePromos}">
+            <img th:src="${promo.posterUrl}" alt="Promo Banner">
+            <div class="carousel-caption">
+              <h2 th:text="${promo.judul}">Judul Promo</h2>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-nav prev" onclick="moveCarousel(-1)" th:if="${#lists.size(activePromos) > 1}">❮</button>
+        <button class="carousel-nav next" onclick="moveCarousel(1)" th:if="${#lists.size(activePromos) > 1}">❯</button>
+      </div>
+
+      <section class="card">
+        <!-- Filter Bar -->
+        <div class="filters" style="display:flex; gap:16px; align-items:center; flex-wrap:wrap; margin-bottom:24px; padding-bottom: 16px; border-bottom: 1px solid var(--color-border);">
+          <form method="get" action="/admin/manajemen-promosi" style="display:flex; gap:12px; align-items:center; width:100%;">
+            <input class="input" type="text" name="search" placeholder="Cari judul banner..." th:value="${param.search}" style="flex-grow:1; max-width:250px;">
+            <select class="select" name="status">
+              <option value="SEMUA" th:selected="${param.status == null or param.status[0] == 'SEMUA'}">Semua Status</option>
+              <option value="AKTIF" th:selected="${param.status != null and param.status[0] == 'AKTIF'}">Hanya Aktif</option>
+              <option value="TIDAK_AKTIF" th:selected="${param.status != null and param.status[0] == 'TIDAK_AKTIF'}">Tidak Aktif</option>
+            </select>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:var(--color-text-muted)">Dari:</span>
+              <input type="date" class="input" name="tanggalMulai" th:value="${param.tanggalMulai}">
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-size:13px; color:var(--color-text-muted)">Hingga:</span>
+              <input type="date" class="input" name="tanggalAkhir" th:value="${param.tanggalAkhir}">
+            </div>
+            <button class="btn btn-secondary" type="submit">Filter</button>
+            <a class="btn" href="/admin/manajemen-promosi" style="color:var(--color-primary); font-size:13px; text-decoration:none;">Reset</a>
+          </form>
+        </div>
+
+        <!-- Large List Layout -->
+        <div class="promo-list">
+          <div th:if="${#lists.isEmpty(listPromosi)}" class="empty-state" style="text-align:center; padding:40px; color:var(--color-text-muted);">
+            <div style="font-size:48px; margin-bottom:16px;">🖼️</div>
+            <h3>Belum ada data Banner Promosi</h3>
+            <p>Klik tombol "Tambah Banner Baru" untuk mulai membuat slider promosi.</p>
+          </div>
+
+          <div class="promo-card" th:each="promo : ${listPromosi}">
+            <div class="promo-img-wrapper">
+              <img th:src="${promo.posterUrl}" alt="Poster Promo">
+            </div>
+            <div class="promo-content">
+              <div>
+                <div class="promo-header">
+                  <h3 class="promo-title" th:text="${promo.judul}">Promo Judul</h3>
+                  
+                  <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size: 13px;" th:text="${promo.isAktif ? 'Aktif' : 'Draft'}">Aktif</span>
+                    <form th:action="@{/admin/toggle-promosi/{id}(id=${promo.id})}" method="post" style="margin:0;">
+                      <label class="toggle-switch">
+                        <input type="checkbox" onchange="this.form.submit()" th:checked="${promo.isAktif}">
+                        <span class="slider"></span>
+                      </label>
+                    </form>
+                  </div>
+                </div>
+                
+                <div class="promo-meta">
+                  <div>🗓️ Mulai: <strong th:text="${promo.tanggalMulai}">2026-10-01</strong></div>
+                  <div>🏁 Berakhir: <strong th:text="${promo.tanggalAkhir}">2026-10-15</strong></div>
+                </div>
+                <div class="promo-meta" th:if="${promo.targetUrl != null}">
+                  <div>🔗 Link Tujuan: <a th:href="${promo.targetUrl}" target="_blank" th:text="${promo.targetUrl}">http...</a></div>
+                </div>
+              </div>
+              
+              <div class="promo-actions">
+                <a th:href="@{/admin/edit-promosi(id=${promo.id})}" class="btn btn-secondary">✏️ Edit Banner</a>
+                <form th:action="@{/admin/hapus-promosi/{id}(id=${promo.id})}" method="post" style="margin:0;" onsubmit="return confirm('Apakah Anda yakin ingin menghapus banner ini secara permanen?')">
+                  <button type="submit" class="btn" style="background:#dc3545; color:white; border:none;">🗑️ Hapus</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </section>
+    </main>
+  </div>
+</div>
+
+  <script>
+    // Simple Carousel Logic
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.carousel-item');
+    const totalSlides = slides.length;
+    
+    function moveCarousel(dir) {
+      if(totalSlides === 0) return;
+      currentSlide = (currentSlide + dir + totalSlides) % totalSlides;
+      const inner = document.getElementById('carouselInner');
+      inner.style.transform = `translateX(-${currentSlide * 100}%)`;
+    }
+
+    // Auto rotate every 5 seconds
+    if(totalSlides > 1) {
+      setInterval(() => moveCarousel(1), 5000);
+    }
+  </script>
+</body>
+</html>

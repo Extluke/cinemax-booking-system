@@ -1,0 +1,25 @@
+﻿<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>403 Akses Ditolak | Cineplex</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="auth">
+  <section class="auth-card" style="text-align:center">
+    <a class="brand" href="/" style="padding:0 0 16px 0"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
+    <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:clamp(3rem,6vw,4.5rem);color:var(--color-danger);line-height:1;margin-bottom:8px">
+      403
+    </div>
+    <h1>Akses Ditolak</h1>
+    <p class="muted" style="margin-bottom:24px">Maaf, akun Anda tidak memiliki hak akses yang memadai untuk membuka halaman atau fitur administrasi ini.</p>
+    
+    <div class="toolbar" style="justify-content:center">
+      <a class="btn btn-secondary" href="/login">Masuk Akun Lain</a>
+      <a class="btn btn-primary" href="/">Kembali ke Beranda</a>
+    </div>
+  </section>
+</body>
+</html>
+
