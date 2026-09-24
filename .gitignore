@@ -29,9 +29,9 @@ build/
 !**/src/main/**/build/
 !**/src/test/**/build/
 
-### VS Code ###
-.vscode/
-
-### Cinemax Uploads ###
+### Cinemax Uploads & Scripts ###
+uploads/
 src/main/resources/static/uploads/posters/*
 !src/main/resources/static/uploads/posters/.gitkeep
+*.py
+*.log
