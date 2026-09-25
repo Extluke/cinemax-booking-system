@@ -117,7 +117,9 @@
           const img = new Image();
           img.onload = function() {
             if (this.width > this.height) {
-                alert("Peringatan: Gambar yang Anda unggah berbentuk Lanskap (Lebar). Disarankan menggunakan gambar Portrait (Tinggi).");
+                alert("GAGAL MENGUNGGAH: Gambar yang Anda pilih berbentuk Lanskap (Lebar).\n\nSistem mewajibkan gambar Portrait (Tinggi) dengan rasio 2:3 agar tampilan tidak rusak.");
+                input.value = "";
+                return;
             }
             document.getElementById('posterPlaceholder').style.display = 'none';
             const preview = document.getElementById('posterPreview');

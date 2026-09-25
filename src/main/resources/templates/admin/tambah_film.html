@@ -103,7 +103,9 @@
           img.onload = function() {
             // Cek apakah gambar lanskap
             if (this.width > this.height) {
-                alert("Peringatan: Gambar yang Anda unggah berbentuk Lanskap (Lebar). Disarankan menggunakan gambar Portrait (Tinggi) dengan rasio 2:3 agar tampilan di website lebih rapi.");
+                alert("GAGAL MENGUNGGAH: Gambar yang Anda pilih berbentuk Lanskap (Lebar).\n\nSistem mewajibkan gambar Portrait (Tinggi) dengan rasio 2:3 agar tampilan tidak rusak.");
+                input.value = "";
+                return;
             }
             
             // Tampilkan preview
