@@ -1,6 +1,6 @@
 package com.cinemax.cinemax.domain.config;
 
-import com.cinemax.cinemax.domain.booking.Refund;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 

@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
@@ -35,43 +35,28 @@
       <button class="btn btn-secondary">Riwayat Selesai</button>
     </div>
 
-    <div class="grid" style="gap:18px">
-      <!-- Tiket 1: Siap Tonton -->
-      <article class="card">
+      <div th:if="${transaksiTiketMap == null || transaksiTiketMap.isEmpty()}" class="catalogue-empty">
+        <h2>Belum ada tiket</h2>
+        <p class="muted">Kamu belum melakukan pemesanan tiket apa pun.</p>
+      </div>
+
+      <article th:each="entry : ${transaksiTiketMap}" class="card" th:with="transaksi=${entry.key}, tiketList=${entry.value}, jadwal=${tiketList.get(0).jadwal}">
         <div class="page-head" style="margin-bottom:12px">
           <div>
-            <span class="badge badge-success">SIAP DIGUNAKAN</span>
-            <h2 style="margin-top:8px">Midnight Signal</h2>
-            <p class="muted">Sabtu, 19 September 2026 · 14:00 WIB · Studio 1 (A7, A8)</p>
+            <span class="badge" th:classappend="${transaksi.status.name() == 'SUCCESS'} ? 'badge-success' : (${transaksi.status.name() == 'PENDING'} ? 'badge-warning' : 'badge-danger')" th:text="${transaksi.status.name()}">STATUS</span>
+            <h2 style="margin-top:8px" th:text="${jadwal.film.judul}">Judul Film</h2>
+            <p class="muted" th:text="${#temporals.format(jadwal.waktuMulai, 'EEEE, dd MMMM yyyy · HH:mm')} + ' WIB · ' + ${jadwal.studio.nama} + ' (' + ${#strings.listJoin(tiketList.![nomorKursi], ', ')} + ')'">Detail Jadwal</p>
           </div>
           <div class="right">
             <span class="muted" style="font-size:12px;display:block">Total Transaksi</span>
-            <strong style="font-size:16px">Rp70.000</strong>
+            <strong style="font-size:16px" th:text="'Rp' + ${#numbers.formatInteger(transaksi.totalHarga, 0, 'POINT')}">Rp0</strong>
           </div>
         </div>
         <div class="toolbar" style="margin-top:14px;justify-content:flex-end">
-          <a class="btn btn-primary" href="/detail-tiket">Buka E-Tiket & QR Code →</a>
+          <a th:if="${transaksi.status.name() == 'SUCCESS'}" class="btn btn-primary" th:href="@{/detail-tiket(transaksiId=${transaksi.id})}">Buka E-Tiket & QR Code →</a>
+          <a th:if="${transaksi.status.name() == 'PENDING'}" class="btn btn-primary" th:href="@{/faktur(transaksiId=${transaksi.id})}">Lanjut Pembayaran →</a>
         </div>
       </article>
-
-      <!-- Tiket 2: Menunggu Pembayaran -->
-      <article class="card">
-        <div class="page-head" style="margin-bottom:12px">
-          <div>
-            <span class="badge badge-warning">MENUNGGU PEMBAYARAN</span>
-            <h2 style="margin-top:8px">Orbit Nine</h2>
-            <p class="muted">Minggu, 20 September 2026 · 17:15 WIB · Studio 2 (C4)</p>
-          </div>
-          <div class="right">
-            <span class="muted" style="font-size:12px;display:block">Batas Waktu: 11:20</span>
-            <strong style="font-size:16px">Rp35.000</strong>
-          </div>
-        </div>
-        <div class="toolbar" style="margin-top:14px;justify-content:flex-end">
-          <a class="btn btn-primary" href="/faktur">Bayar Sekarang</a>
-        </div>
-      </article>
-    </div>
   </main>
 
   <!-- Mobile Bottom Navigation -->

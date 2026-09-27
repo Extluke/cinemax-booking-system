@@ -4,7 +4,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import java.io.PrintWriter;
-import java.io.StringWriter;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;

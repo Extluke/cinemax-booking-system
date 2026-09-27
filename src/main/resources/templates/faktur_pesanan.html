@@ -33,38 +33,66 @@
       <div class="stat-list">
         <div>
           <span>Judul Film</span>
-          <strong>Midnight Signal</strong>
+          <strong th:text="${jadwal.film.judul}">Midnight Signal</strong>
         </div>
         <div>
           <span>Jadwal Tayang</span>
-          <strong>19 September 2026 · 14:00 WIB</strong>
+          <strong th:text="${#temporals.format(jadwal.waktuMulai, 'dd MMMM yyyy · HH:mm')} + ' WIB'">19 September 2026 · 14:00 WIB</strong>
         </div>
         <div>
           <span>Studio & Tipe</span>
-          <strong>Studio 1 · Regular 2D</strong>
+          <strong th:text="${jadwal.studio.nama} + ' · ' + ${jadwal.studio.tipe.nama}">Studio 1 · Regular 2D</strong>
         </div>
         <div>
           <span>Nomor Kursi</span>
-          <strong>A7, A8 (2 Tiket)</strong>
+          <strong th:text="${#strings.listJoin(tiketList.![nomorKursi], ', ')} + ' (' + ${#lists.size(tiketList)} + ' Tiket)'">A7, A8 (2 Tiket)</strong>
         </div>
         <div>
           <span>Harga Tiket</span>
-          <span>2 x Rp35.000 = Rp70.000</span>
-        </div>
-        <div>
-          <span>Biaya Layanan</span>
-          <span>Rp3.000</span>
+          <strong th:text="${#lists.size(tiketList)} + ' x Rp' + ${#numbers.formatInteger(jadwal.harga, 0, 'POINT')} + ' = Rp' + ${#numbers.formatInteger(jadwal.harga * #lists.size(tiketList), 0, 'POINT')}">2 x Rp35.000 = Rp70.000</strong>
         </div>
         <div style="font-size:15px;padding-top:10px">
           <strong>Total Pembayaran</strong>
-          <strong style="color:var(--color-primary);font-size:18px">Rp73.000</strong>
+          <strong style="color:var(--color-primary);font-size:18px" th:text="'Rp' + ${#numbers.formatInteger(transaksi.totalHarga, 0, 'POINT')}">Rp70.000</strong>
         </div>
       </div>
 
       <div style="margin-top:28px">
-        <a class="btn btn-primary" style="width:100%" href="/daftar-tiket">Bayar Sekarang dengan Payment Gateway →</a>
-        <a class="btn btn-secondary" style="width:100%;margin-top:10px" href="/pilih-kursi">Ubah Kursi</a>
+        <button id="pay-button" class="btn btn-primary" style="width:100%; border: none;">Bayar Sekarang dengan Payment Gateway →</button>
+        <a class="btn btn-secondary" style="width:100%;margin-top:10px" th:href="@{/pilih-kursi(jadwalId=${jadwal.id})}">Ubah Kursi</a>
       </div>
+
+      <!-- Midtrans Snap Script -->
+      <!-- Menggunakan sandbox url, sebaiknya ganti jika mode production. -->
+      <!-- Atribut data-client-key opsional jika menggunakan token karena token sudah mengenkapsulasi transaksi -->
+      <script src="https://app.sandbox.midtrans.com/snap/snap.js" th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
+      <script th:inline="javascript">
+        /*<![CDATA[*/
+        const snapToken = /*[[${token}]]*/ null;
+        /*]]>*/
+        
+        document.getElementById('pay-button').addEventListener('click', function () {
+            if (snapToken) {
+                window.snap.pay(snapToken, {
+                    onSuccess: function(result){
+                        // Redirect ke halaman tiket saya
+                        window.location.href = "/daftar-tiket";
+                    },
+                    onPending: function(result){
+                        alert("Pembayaran tertunda. Silahkan periksa daftar transaksi Anda.");
+                    },
+                    onError: function(result){
+                        alert("Pembayaran gagal!");
+                    },
+                    onClose: function(){
+                        alert('Anda menutup popup sebelum menyelesaikan pembayaran');
+                    }
+                });
+            } else {
+                alert("Token pembayaran tidak valid.");
+            }
+        });
+      </script>
     </section>
   </main>
 

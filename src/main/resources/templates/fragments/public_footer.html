@@ -1,0 +1,24 @@
+<!--
+  Tujuan program: Menampilkan footer halaman publik memakai profil bioskop dari database.
+  Contributor: 'Aarif Rahmaan J. Faqiih
+  NIM: 103112430182 | Role: User | Kelas: IF-12-07
+  Terakhir diubah: 27 September 2026, 00:00 WIB
+-->
+<footer th:fragment="publicFooter" class="public-footer">
+  <p>
+    <strong th:text="${appConfig.namaBioskop}">Cinemax Multiplex</strong>
+  </p>
+
+  <address class="public-footer__address" th:if="${!#strings.isEmpty(appConfig.alamatBioskop)}">
+    <span th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</span>
+  </address>
+
+  <p th:if="${!#strings.isEmpty(appConfig.kontakCs)}">
+    Layanan pelanggan:
+    <a th:href="${'tel:' + appConfig.kontakCs}" th:text="${appConfig.kontakCs}">08123456789</a>
+  </p>
+
+  <p>
+    © 2026 <span th:text="${appConfig.namaBioskop}">Cinemax Multiplex</span>. Seluruh hak cipta dilindungi.
+  </p>
+</footer>

@@ -1,28 +1,37 @@
+<!--
+  Tujuan program: Menampilkan katalog film database yang dapat difilter dan dibuka per film.
+  Contributor: 'Aarif Rahmaan J. Faqiih
+  NIM: 103112430182 | Role: User | Kelas: IF-12-07
+  Terakhir diubah: 27 September 2026, 00:00 WIB
+-->
 <!doctype html>
-<html lang="id" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html lang="id" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Jelajah Film | Cineplex</title>
+  <title th:text="${'Jelajah Film | ' + appConfig.namaBioskop}">Jelajah Film | Cinemax</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
 <body class="user-shell">
   <header class="user-header">
-    <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
-    <nav class="user-nav">
+    <a class="brand" href="/"><span th:text="${#strings.toUpperCase(appConfig.namaBioskop)}">CINEMAX</span></a>
+
+    <nav aria-label="Navigasi utama" class="user-nav">
       <a href="/">Beranda</a>
       <a class="active" href="/jelajah">Film</a>
       <a href="/daftar-tiket">Tiket Saya</a>
     </nav>
+
     <div class="toolbar" sec:authorize="!isAuthenticated()">
       <a class="btn btn-secondary" href="/login">Masuk</a>
       <a class="btn btn-primary" href="/register">Daftar</a>
     </div>
+
     <div class="toolbar" sec:authorize="isAuthenticated()">
-      <a class="btn btn-secondary" href="/admin/dashboard" sec:authorize="hasRole('ADMIN')">Dashboard Admin</a>
-      <a class="btn btn-ghost" href="/profil" style="margin-right:8px"><span sec:authentication="name">User</span></a>
-      <form th:action="@{/logout}" method="post" style="display:inline;">
-         <button type="submit" class="btn btn-primary" style="padding: 8px 16px;">Keluar</button>
+      <a class="btn btn-secondary" href="/admin/dashboard" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">Dashboard Admin</a>
+      <a class="btn btn-ghost" href="/profil"><span sec:authentication="name">User</span></a>
+      <form method="post" th:action="@{/logout}">
+        <button class="btn btn-primary" type="submit">Keluar</button>
       </form>
     </div>
   </header>
@@ -31,96 +40,48 @@
     <div class="page-head">
       <div>
         <h1>Jelajah Katalog Film</h1>
-        <p class="muted">Temukan tontonan terbaik untuk akhir pekanmu.</p>
+        <p class="muted">Temukan film yang sedang tayang atau segera hadir.</p>
       </div>
-      <div class="filters" style="margin-bottom:0">
-        <input class="input" id="film-search" type="search" placeholder="Cari judul film..." aria-label="Cari judul film">
-        <select class="select" id="genre-filter" aria-label="Filter genre film">
-          <option>Semua Genre</option>
-          <option>Action</option>
-          <option>Horror</option>
-          <option>Drama</option>
-          <option>Sci-Fi</option>
+      <div class="filters">
+        <input aria-label="Cari judul film" class="input" id="film-search" placeholder="Cari judul film..." type="search">
+        <select aria-label="Filter genre film" class="select" id="genre-filter">
+          <option value="">Semua Genre</option>
+          <option th:each="genre : ${genres}" th:text="${genre.nama}" th:value="${genre.nama}">Action</option>
         </select>
       </div>
     </div>
 
-    <p class="catalogue-status muted" id="catalogue-status" aria-live="polite">Menampilkan 4 film</p>
-    <div class="poster-grid" id="film-catalogue">
-      <article class="card" data-movie data-title="Midnight Signal" data-genre="sci-fi">
-        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Midnight Signal">
-          <div class="poster">MIDNIGHT<br>SIGNAL</div>
-        </a>
-        <div class="movie-details">
-          <span class="badge badge-info">Sci-Fi</span>
-          <strong>Midnight Signal</strong>
-          <p class="muted" style="font-size:12px">124 Menit · 13+</p>
-          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
-        </div>
-      </article>
+    <p aria-live="polite" class="catalogue-status muted" id="catalogue-status" th:text="${'Menampilkan ' + #lists.size(films) + ' film'}">Menampilkan 0 film</p>
 
-      <article class="card" data-movie data-title="Orbit Nine" data-genre="action">
-        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Orbit Nine">
-          <div class="poster" style="background:linear-gradient(145deg,#182c48,#8d2e32)">ORBIT<br>NINE</div>
+    <div class="poster-grid" id="film-catalogue" th:if="${!#lists.isEmpty(films)}">
+      <article class="card" data-movie th:attr="data-title=${film.judul},data-genres=${#strings.listJoin(film.genres.![nama], ',')}" th:each="film : ${films}">
+        <a class="movie-poster-link" th:aria-label="${'Lihat detail ' + film.judul}" th:href="@{/film/{filmId}(filmId=${film.id})}">
+          <img alt="Poster film" class="poster poster-image" th:if="${!#strings.isEmpty(film.posterUrl)}" th:src="${film.posterUrl}">
+          <div class="poster" th:if="${#strings.isEmpty(film.posterUrl)}" th:text="${film.judul}">Poster Film</div>
         </a>
         <div class="movie-details">
-          <span class="badge badge-warning">Action</span>
-          <strong>Orbit Nine</strong>
-          <p class="muted" style="font-size:12px">118 Menit · 17+</p>
-          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
-        </div>
-      </article>
-
-      <article class="card" data-movie data-title="Rumah Terakhir" data-genre="horror">
-        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Rumah Terakhir">
-          <div class="poster" style="background:linear-gradient(145deg,#14251c,#5c3925)">RUMAH<br>TERAKHIR</div>
-        </a>
-        <div class="movie-details">
-          <span class="badge badge-danger">Horror</span>
-          <strong>Rumah Terakhir</strong>
-          <p class="muted" style="font-size:12px">102 Menit · 17+</p>
-          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
-        </div>
-      </article>
-
-      <article class="card" data-movie data-title="Kota Senja" data-genre="drama">
-        <a class="movie-poster-link" href="detail_film.html" aria-label="Lihat detail Kota Senja">
-          <div class="poster" style="background:linear-gradient(145deg,#4a331a,#141414)">KOTA<br>SENJA</div>
-        </a>
-        <div class="movie-details">
-          <span class="badge badge-success">Drama</span>
-          <strong>Kota Senja</strong>
-          <p class="muted" style="font-size:12px">110 Menit · SU</p>
-          <a class="btn btn-primary" href="/pilih-jadwal">Beli Tiket</a>
+          <span class="badge badge-info" th:each="genre : ${film.genres}" th:text="${genre.nama}">Genre</span>
+          <strong th:text="${film.judul}">Judul Film</strong>
+          <p class="muted" th:text="${(film.durasi != null ? film.durasi + ' Menit' : 'Durasi belum tersedia') + ' · ' + (film.batasUsia ?: '-')}">124 Menit · 13+</p>
+          <a class="btn btn-primary" th:href="@{/pilih-jadwal(filmId=${film.id})}">Lihat Jadwal</a>
         </div>
       </article>
     </div>
-    <div class="catalogue-empty" id="catalogue-empty" hidden>
-      <h2>Film tidak ditemukan</h2>
-      <p class="muted">Coba gunakan judul atau genre lain.</p>
+
+    <div class="catalogue-empty" id="catalogue-empty" th:hidden="${!#lists.isEmpty(films)}">
+      <h2 th:text="${#lists.isEmpty(films) ? 'Belum ada film untuk ditampilkan' : 'Film tidak ditemukan'}">Film tidak ditemukan</h2>
+      <p class="muted" th:text="${#lists.isEmpty(films) ? 'Silakan periksa kembali data film dari CMS.' : 'Coba gunakan judul atau genre lain.'}">Coba gunakan judul atau genre lain.</p>
     </div>
   </main>
 
-  <!-- Mobile Bottom Navigation -->
-  <nav class="bottom-nav" aria-label="Navigasi Bawah Ponsel">
-    <a href="/" class="bottom-nav-item">
-      <span class="bottom-nav-icon">⌂</span>
-      <span>Beranda</span>
-    </a>
-    <a href="/jelajah" class="bottom-nav-item active">
-      <span class="bottom-nav-icon">🎬</span>
-      <span>Film</span>
-    </a>
-    <a href="/daftar-tiket" class="bottom-nav-item">
-      <span class="bottom-nav-icon">🎟</span>
-      <span>Tiket Saya</span>
-    </a>
-    <a href="/profil" class="bottom-nav-item">
-      <span class="bottom-nav-icon">👤</span>
-      <span>Akun</span>
-    </a>
+  <nav aria-label="Navigasi bawah ponsel" class="bottom-nav">
+    <a class="bottom-nav-item" href="/"><span class="bottom-nav-icon">⌂</span><span>Beranda</span></a>
+    <a class="bottom-nav-item active" href="/jelajah"><span class="bottom-nav-icon">🎬</span><span>Film</span></a>
+    <a class="bottom-nav-item" href="/daftar-tiket"><span class="bottom-nav-icon">🎟</span><span>Tiket Saya</span></a>
+    <a class="bottom-nav-item" href="/profil"><span class="bottom-nav-icon">👤</span><span>Akun</span></a>
   </nav>
+
+  <footer th:replace="~{fragments/public_footer :: publicFooter}"></footer>
   <script src="/js/app.js"></script>
 </body>
 </html>
-

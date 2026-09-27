@@ -1,6 +1,6 @@
 package com.cinemax.cinemax.domain.booking;
 
-import com.cinemax.cinemax.domain.booking.Transaksi;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 

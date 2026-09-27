@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
 <head>
   <meta charset="utf-8">
@@ -10,8 +10,8 @@
   <header class="user-header">
     <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
     <div style="text-align:center">
-      <strong>Midnight Signal</strong><br>
-      <span class="muted" style="font-size:12px">Studio 1 · 19 Sep 2026</span>
+      <strong th:text="${jadwal.film.judul}">Midnight Signal</strong><br>
+      <span class="muted" style="font-size:12px" th:text="${jadwal.studio.nama + ' · ' + #temporals.format(jadwal.waktuMulai, 'dd MMM yyyy HH:mm')}">Studio 1 · 19 Sep 2026</span>
     </div>
     <span class="badge badge-info">Langkah 2/3</span>
   </header>
@@ -29,40 +29,17 @@
       <div class="seat-scroll-wrap">
         <div class="screen">LAYAR BIOSKOP</div>
         <div class="seat-grid" role="region" aria-label="Layout Kursi Bioskop">
-          <i class="seat walkway" aria-hidden="true"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi A2 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi A3 Regular"></i>
-          <i class="seat occupied" aria-label="Kursi A4 Terisi"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi A5 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi A6 Regular"></i>
-          <i class="seat sweetbox selected" tabindex="0" role="button" aria-label="Kursi Sweetbox B1-B2 Dipilih"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi B3 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi B4 Regular"></i>
-          <i class="seat occupied" aria-label="Kursi B5 Terisi"></i>
-          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere C1"></i>
-          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere C2"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi C3 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi C4 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi D1 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi D2 Regular"></i>
-          <i class="seat occupied" aria-label="Kursi D3 Terisi"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi D4 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi D5 Regular"></i>
-          <i class="seat sweetbox" tabindex="0" role="button" aria-label="Kursi Sweetbox E1-E2"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi E3 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi E4 Regular"></i>
-          <i class="seat occupied" aria-label="Kursi E5 Terisi"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi F1 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi F2 Regular"></i>
-          <i class="seat premiere" tabindex="0" role="button" aria-label="Kursi Premiere F3"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi G1 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi G2 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi G3 Regular"></i>
-          <i class="seat occupied" aria-label="Kursi G4 Terisi"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi H1 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi H2 Regular"></i>
-          <i class="seat" tabindex="0" role="button" aria-label="Kursi H3 Regular"></i>
-          <i class="seat sweetbox" tabindex="0" role="button" aria-label="Kursi Sweetbox H4-H5"></i>
+          <i th:each="kursi : ${semuaKursi}" 
+             th:class="'seat ' + 
+                       (${kursi.tipe.name() == 'JALAN_SETAPAK'} ? 'walkway ' : '') + 
+                       (${kursiTerisi.contains(kursi.kodeKursi)} ? 'occupied ' : '') + 
+                       (${kursi.kelasKursi != null ? #strings.toLowerCase(kursi.kelasKursi.namaKelas) : ''})"
+             th:classappend="${kursi.spanKolom != null && kursi.spanKolom > 1} ? ' sweetbox' : ''"
+             th:style="${kursi.spanKolom != null && kursi.spanKolom > 1} ? 'grid-column: span ' + ${kursi.spanKolom} : ''"
+             th:tabindex="${kursiTerisi.contains(kursi.kodeKursi) || kursi.tipe.name() == 'JALAN_SETAPAK'} ? '-1' : '0'"
+             th:role="${kursi.tipe.name() == 'JALAN_SETAPAK'} ? '' : 'button'"
+             th:aria-label="${kursi.tipe.name() == 'JALAN_SETAPAK'} ? '' : (${kursiTerisi.contains(kursi.kodeKursi)} ? 'Kursi ' + kursi.kodeKursi + ' Terisi' : 'Kursi ' + kursi.kodeKursi + ' Tersedia')"
+             th:attr="data-kode-kursi=${kursi.kodeKursi}"></i>
         </div>
       </div>
     </section>
@@ -86,6 +63,79 @@
       <a class="btn btn-primary" href="/faktur">Lanjut Checkout →</a>
     </div>
   </aside>
+  <script th:inline="javascript">
+    /*<![CDATA[*/
+    const jadwalId = /*[[${jadwal.id}]]*/ 0;
+    const hargaKursi = /*[[${jadwal.harga}]]*/ 35000;
+    const csrfToken = /*[[${_csrf.token}]]*/ '';
+    const csrfHeaderName = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
+    /*]]>*/
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      const seats = document.querySelectorAll('.seat[role="button"]:not(.occupied):not(.walkway)');
+      const totalBayarEl = document.querySelector('.checkout-bar strong:last-child');
+      const checkoutBtn = document.querySelector('.checkout-bar .btn-primary');
+      
+      let selectedSeats = [];
+      
+      const updateTotal = () => {
+        const total = selectedSeats.length * hargaKursi;
+        totalBayarEl.textContent = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(total);
+      };
+      
+      seats.forEach(seat => {
+        seat.addEventListener('click', () => {
+          seat.classList.toggle('selected');
+          const kode = seat.getAttribute('data-kode-kursi');
+          if (seat.classList.contains('selected')) {
+            selectedSeats.push(kode);
+          } else {
+            selectedSeats = selectedSeats.filter(s => s !== kode);
+          }
+          updateTotal();
+        });
+      });
+      
+      checkoutBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (selectedSeats.length === 0) {
+          alert('Silakan pilih minimal 1 kursi!');
+          return;
+        }
+        
+        checkoutBtn.textContent = 'Memproses...';
+        checkoutBtn.style.pointerEvents = 'none';
+        
+        fetch('/api/payment/checkout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            [csrfHeaderName]: csrfToken
+          },
+          body: JSON.stringify({
+            jadwalId: jadwalId,
+            kursiKode: selectedSeats
+          })
+        })
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            alert('Gagal: ' + data.error);
+            checkoutBtn.textContent = 'Lanjut Checkout →';
+            checkoutBtn.style.pointerEvents = 'auto';
+          } else {
+            window.location.href = '/faktur?transaksiId=' + data.transaksiId + '&token=' + data.paymentUrl;
+          }
+        })
+        .catch(err => {
+          alert('Terjadi kesalahan jaringan.');
+          checkoutBtn.textContent = 'Lanjut Checkout →';
+          checkoutBtn.style.pointerEvents = 'auto';
+        });
+      });
+      
+      updateTotal(); // initial state
+    });
+  </script>
 </body>
 </html>
-

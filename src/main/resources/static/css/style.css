@@ -1,3 +1,11 @@
+/**
+ * Tujuan program: Menyediakan gaya responsif untuk halaman publik CineMax.
+ * Contributor: 'Aarif Rahmaan J. Faqiih
+ * NIM: 103112430182
+ * Role: User
+ * Kelas: IF-12-07
+ * Terakhir diubah: 27 September 2026, 00:00 WIB
+ */
 @import url('https://fonts.googleapis.com/css2?family=Google+Sans+Flex:opsz,wght@6..144,1..1000&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@800;900&display=swap');
 
@@ -1076,6 +1084,66 @@ tbody tr:last-child td {
   border-right: 0;
 }
 
+/* Banner CMS uses horizontal scroll so each item remains fully actionable on touch devices. */
+.promotion-list {
+  display: flex;
+  gap: var(--space-base);
+  overflow-x: auto;
+  padding: 2px 2px var(--space-base);
+  scroll-snap-type: x mandatory;
+}
+
+.promotion-banner {
+  position: relative;
+  display: grid;
+  align-items: end;
+  min-width: min(100%, 760px);
+  min-height: 230px;
+  flex: 1 0 min(100%, 760px);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #28161c, #4a1923 53%, #7a3133);
+  box-shadow: var(--shadow-md);
+  scroll-snap-align: start;
+}
+
+.promotion-banner:hover {
+  border-color: var(--color-border-strong);
+}
+
+.promotion-banner:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring-offset), var(--shadow-md);
+}
+
+.promotion-banner__image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.promotion-banner__overlay {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: var(--space-sm);
+  padding: clamp(20px, 4vw, 32px);
+  background: linear-gradient(90deg, rgb(16 17 18 / .94), rgb(16 17 18 / .55) 65%, transparent);
+}
+
+.promotion-banner__overlay h2 {
+  max-width: 28ch;
+  margin: 0;
+}
+
+.promotion-banner__action {
+  font-weight: 650;
+  color: #ffffff;
+}
+
 /* Movie Horizontal Scroll List */
 .movie-row {
   display: flex;
@@ -1143,6 +1211,14 @@ tbody tr:last-child td {
   user-select: none;
 }
 
+.poster-image {
+  display: block;
+  object-fit: cover;
+  object-position: center;
+  padding: 0;
+  color: transparent;
+}
+
 .poster:hover {
   transform: translateY(-6px) scale(1.01);
   box-shadow: 0 20px 36px rgb(0 0 0 / .32);
@@ -1164,6 +1240,58 @@ tbody tr:last-child td {
   font-size: 11px;
   color: #dddddd;
   margin-top: 4px;
+}
+
+/* Detail keeps the image and database metadata readable at every viewport width. */
+.film-detail {
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 48px);
+  align-items: start;
+}
+
+.film-detail__poster {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  object-fit: cover;
+  box-shadow: var(--shadow-md);
+}
+
+.film-detail__poster--fallback {
+  display: flex;
+  align-items: end;
+  padding: var(--space-base);
+  background: linear-gradient(150deg, #6b1020, #181818 62%, #d17735);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.film-detail__content {
+  min-width: 0;
+}
+
+.film-detail__badges {
+  margin-bottom: var(--space-base);
+}
+
+.film-detail__synopsis {
+  max-width: 65ch;
+  white-space: pre-line;
+}
+
+.hero-content__actions {
+  margin-top: var(--space-base);
+}
+
+.empty-public-content {
+  margin-top: var(--space-xl);
+  padding: clamp(20px, 3vw, 32px);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  background-color: var(--color-bg-surface);
+  text-align: center;
 }
 
 /* Schedule Days Picker */
@@ -1197,6 +1325,36 @@ tbody tr:last-child td {
 .day:hover {
   border-color: var(--color-primary);
   background-color: var(--color-bg-elevated);
+}
+
+.day--active {
+  border-color: var(--color-primary);
+  background-color: var(--color-bg-elevated);
+  box-shadow: 0 0 0 1px var(--color-primary-subtle) inset;
+}
+
+.schedule-header-title {
+  display: grid;
+  gap: 2px;
+  text-align: center;
+}
+
+.schedule-studio {
+  margin-top: var(--space-xl);
+}
+
+.schedule-studio__header {
+  margin-bottom: var(--space-base);
+}
+
+.schedule-studio__times {
+  flex-wrap: wrap;
+}
+
+.schedule-studio__times .btn {
+  display: grid;
+  gap: 2px;
+  text-align: left;
 }
 
 /* ==========================================================================
@@ -1611,6 +1769,34 @@ footer {
   margin-top: 20px;
 }
 
+.public-footer {
+  display: grid;
+  gap: 4px;
+}
+
+.public-footer__address {
+  font-style: normal;
+}
+
+.public-footer a {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.profile-summary,
+.profile-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-base);
+}
+
+.profile-summary {
+  justify-content: flex-start;
+  margin-bottom: var(--space-xl);
+}
+
 /* ==========================================================================
    RESPONSIVE BREAKPOINTS (100% Adaptive Across All Devices)
    ========================================================================== */
@@ -1796,6 +1982,18 @@ footer {
     font-size: clamp(2.25rem, 11vw, 3.4rem);
   }
 
+  .promotion-banner {
+    min-height: 200px;
+  }
+
+  .film-detail {
+    grid-template-columns: 1fr;
+  }
+
+  .film-detail__poster {
+    width: min(280px, 100%);
+  }
+
   /* Seat Layout Mobile Optimizations */
   .seat-hint {
     display: block; /* Shows scroll guidance */
@@ -1896,6 +2094,23 @@ footer {
 
   .movie-card {
     min-width: min(46vw, 180px);
+  }
+
+  .schedule-header-title {
+    display: none;
+  }
+
+  .profile-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .profile-actions > * {
+    width: 100%;
+  }
+
+  .profile-actions .btn {
+    width: 100%;
   }
 
   .day {

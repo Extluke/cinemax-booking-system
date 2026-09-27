@@ -7,7 +7,7 @@ import com.cinemax.cinemax.domain.booking.Transaksi;
 import com.cinemax.cinemax.domain.booking.TransaksiRepository;
 import com.cinemax.cinemax.domain.schedule.Jadwal;
 import com.cinemax.cinemax.domain.schedule.JadwalRepository;
-import com.cinemax.cinemax.domain.schedule.Kursi;
+
 import com.cinemax.cinemax.domain.user.User;
 import com.cinemax.cinemax.domain.user.UserRepository;
 import com.cinemax.cinemax.infrastructure.payment.PaymentGateway;
