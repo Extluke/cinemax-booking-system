@@ -95,6 +95,11 @@ public class AdminPageController {
         public int persentase;
         public long tiketTerjual;
         public long totalKapasitasHariIni;
+
+        public String getNamaStudio() { return namaStudio; }
+        public int getPersentase() { return persentase; }
+        public long getTiketTerjual() { return tiketTerjual; }
+        public long getTotalKapasitasHariIni() { return totalKapasitasHariIni; }
     }
 
     @GetMapping("/dashboard")
@@ -123,10 +128,12 @@ public class AdminPageController {
         for (Studio studio : studios) {
             long terjual = tiketRepository.countTicketsSoldByStudioInPeriod(studio.getId(), awalHariIni, awalBesok);
             long jumlahJadwal = jadwalRepository.countSchedulesByStudioInPeriod(studio.getId(), awalHariIni, awalBesok);
-            long kapasitasTotal = jumlahJadwal * studio.getKapasitas();
+            long kapasitas = (studio.getKapasitas() != null) ? studio.getKapasitas() : 0;
+            long kapasitasTotal = jumlahJadwal * kapasitas;
 
             StudioOccupancyDTO dto = new StudioOccupancyDTO();
-            dto.namaStudio = studio.getNama() + " (" + studio.getTipe().getNama() + ")";
+            String tipeStudio = (studio.getTipe() != null && studio.getTipe().getNama() != null) ? studio.getTipe().getNama() : "Tanpa Tipe";
+            dto.namaStudio = studio.getNama() + " (" + tipeStudio + ")";
             dto.tiketTerjual = terjual;
             dto.totalKapasitasHariIni = kapasitasTotal;
 
@@ -153,8 +160,10 @@ public class AdminPageController {
 
         java.util.Map<String, Long> salesMap = new java.util.HashMap<>();
         for (Object[] row : salesDataRaw) {
-            java.sql.Date sqlDate = (java.sql.Date) row[0];
-            salesMap.put(sqlDate.toLocalDate().toString(), ((Number) row[1]).longValue());
+            if (row[0] != null) {
+                String dateStr = row[0].toString().substring(0, 10); // Ensure yyyy-MM-dd
+                salesMap.put(dateStr, ((Number) row[1]).longValue());
+            }
         }
 
         while (!current.isAfter(end)) {
