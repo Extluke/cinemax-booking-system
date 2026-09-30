@@ -45,7 +45,8 @@
           <div>
             <span class="badge" th:classappend="${transaksi.status.name() == 'SUCCESS'} ? 'badge-success' : (${transaksi.status.name() == 'PENDING'} ? 'badge-warning' : 'badge-danger')" th:text="${transaksi.status.name()}">STATUS</span>
             <h2 style="margin-top:8px" th:text="${jadwal.film.judul}">Judul Film</h2>
-            <p class="muted" th:text="${#temporals.format(jadwal.waktuMulai, 'EEEE, dd MMMM yyyy · HH:mm')} + ' WIB · ' + ${jadwal.studio.nama} + ' (' + ${#strings.listJoin(tiketList.![nomorKursi], ', ')} + ')'">Detail Jadwal</p>
+            <!-- Menampilkan jadwal, nama studio, dan tipe studio dari database -->
+            <p class="muted" th:text="${#temporals.format(jadwal.waktuMulai, 'EEEE, dd MMMM yyyy · HH:mm')} + ' WIB · ' + ${jadwal.studio.nama} + (${jadwal.studio.tipe != null ? ' (' + jadwal.studio.tipe.nama + ')' : ''}) + ' (' + ${#strings.listJoin(tiketList.![nomorKursi], ', ')} + ')'">Detail Jadwal</p>
           </div>
           <div class="right">
             <span class="muted" style="font-size:12px;display:block">Total Transaksi</span>

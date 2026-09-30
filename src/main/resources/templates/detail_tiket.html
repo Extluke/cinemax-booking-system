@@ -31,6 +31,8 @@
         <div>
           <span class="muted" style="font-size:11px;display:block">STUDIO</span>
           <strong style="font-size:16px" th:text="${jadwal.studio.nama}">Studio 1</strong>
+          <!-- Tipe studio dari database -->
+          <span class="muted" style="font-size:12px;display:block" th:if="${jadwal.studio.tipe != null}" th:text="${jadwal.studio.tipe.nama}">Regular 2D</span>
         </div>
         <div style="text-align:right">
           <span class="muted" style="font-size:11px;display:block">NOMOR KURSI</span>

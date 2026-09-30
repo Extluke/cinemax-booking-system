@@ -41,7 +41,8 @@
         </div>
         <div>
           <span>Studio & Tipe</span>
-          <strong th:text="${jadwal.studio.nama} + ' · ' + ${jadwal.studio.tipe.nama}">Studio 1 · Regular 2D</strong>
+          <!-- Menampilkan nama studio beserta tipe studio dari database (null-safe) -->
+          <strong th:text="${jadwal.studio.nama + (jadwal.studio.tipe != null ? ' · ' + jadwal.studio.tipe.nama : '')}">Studio 1 · Regular 2D</strong>
         </div>
         <div>
           <span>Nomor Kursi</span>

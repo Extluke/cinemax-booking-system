@@ -11,7 +11,8 @@
     <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
     <div style="text-align:center">
       <strong th:text="${jadwal.film.judul}">Midnight Signal</strong><br>
-      <span class="muted" style="font-size:12px" th:text="${jadwal.studio.nama + ' · ' + #temporals.format(jadwal.waktuMulai, 'dd MMM yyyy HH:mm')}">Studio 1 · 19 Sep 2026</span>
+      <!-- Menampilkan nama studio beserta tipe studio dari database -->
+      <span class="muted" style="font-size:12px" th:text="${jadwal.studio.nama + (jadwal.studio.tipe != null ? ' · ' + jadwal.studio.tipe.nama : '') + ' · ' + #temporals.format(jadwal.waktuMulai, 'dd MMM yyyy HH:mm')}">Studio 1 · Regular 2D · 19 Sep 2026</span>
     </div>
     <span class="badge badge-info">Langkah 2/3</span>
   </header>
