@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="id" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${promosi.judul + ' — ' + appConfig.namaBioskop}">Detail Promosi — Cinemax</title>
+  <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="user-shell">
+  <header class="user-header">
+    <a class="brand" href="/"><span th:text="${#strings.toUpperCase(appConfig.namaBioskop)}">CINEMAX</span></a>
+
+    <nav aria-label="Navigasi utama" class="user-nav">
+      <a href="/">Beranda</a>
+      <a href="/jelajah">Film</a>
+      <a href="/daftar-tiket">Tiket Saya</a>
+    </nav>
+
+    <div class="toolbar" sec:authorize="!isAuthenticated()">
+      <a class="btn btn-secondary" href="/login">Masuk</a>
+      <a class="btn btn-primary" href="/register">Daftar</a>
+    </div>
+
+    <div class="toolbar" sec:authorize="isAuthenticated()">
+      <a class="btn btn-secondary" href="/admin/dashboard" sec:authorize="hasAnyRole('ADMIN', 'SUPER_ADMIN')">Dashboard Admin</a>
+      <a class="btn btn-ghost" href="/profil"><span sec:authentication="name">User</span></a>
+      <form method="post" th:action="@{/logout}">
+        <button class="btn btn-primary" type="submit">Keluar</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="user-content">
+    <section class="film-detail" style="margin-top: 2rem;">
+      <img alt="Poster Promo" class="film-detail__poster" th:if="${!#strings.isEmpty(promosi.posterUrl)}" th:src="${promosi.posterUrl}">
+      <div class="film-detail__poster film-detail__poster--fallback" th:if="${#strings.isEmpty(promosi.posterUrl)}" th:text="${promosi.judul}">Poster Promo</div>
+
+      <div class="film-detail__content">
+        <div class="toolbar film-detail__badges">
+          <span class="badge badge-warning">PROMO SPESIAL</span>
+          <span class="badge badge-info" th:text="${'Mulai: ' + #temporals.format(promosi.tanggalMulai, 'dd MMM yyyy')}">Mulai</span>
+          <span class="badge badge-info" th:text="${'Hingga: ' + #temporals.format(promosi.tanggalAkhir, 'dd MMM yyyy')}">Akhir</span>
+        </div>
+
+        <h1 th:text="${promosi.judul}">Judul Promo</h1>
+        <p class="muted film-detail__synopsis">Dapatkan penawaran menarik ini hanya di Cinemax. Syarat dan ketentuan berlaku.</p>
+
+        <div class="toolbar hero-content__actions">
+          <a class="btn btn-primary" href="/jelajah">Pesan Tiket Sekarang</a>
+          <a class="btn btn-secondary" href="/">← Kembali ke beranda</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav aria-label="Navigasi bawah ponsel" class="bottom-nav">
+    <a class="bottom-nav-item" href="/"><span class="bottom-nav-icon">⌂</span><span>Beranda</span></a>
+    <a class="bottom-nav-item" href="/jelajah"><span class="bottom-nav-icon">🎬</span><span>Film</span></a>
+    <a class="bottom-nav-item" href="/daftar-tiket"><span class="bottom-nav-icon">🎟</span><span>Tiket Saya</span></a>
+    <a class="bottom-nav-item" href="/profil"><span class="bottom-nav-icon">👤</span><span>Akun</span></a>
+  </nav>
+
+  <footer th:replace="~{fragments/public_footer :: publicFooter}"></footer>
+</body>
+</html>

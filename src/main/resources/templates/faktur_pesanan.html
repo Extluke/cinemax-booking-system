@@ -63,9 +63,8 @@
       </div>
 
       <!-- Midtrans Snap Script -->
-      <!-- Menggunakan sandbox url, sebaiknya ganti jika mode production. -->
-      <!-- Atribut data-client-key opsional jika menggunakan token karena token sudah mengenkapsulasi transaksi -->
-      <script src="https://app.sandbox.midtrans.com/snap/snap.js" th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
+      <!-- Menggunakan production url. -->
+      <script src="https://app.midtrans.com/snap/snap.js" th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
       <script th:inline="javascript">
         /*<![CDATA[*/
         const snapToken = /*[[${token}]]*/ null;

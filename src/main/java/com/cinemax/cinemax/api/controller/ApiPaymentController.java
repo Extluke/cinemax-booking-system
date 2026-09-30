@@ -15,6 +15,10 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import com.cinemax.cinemax.domain.config.BioskopConfig;
+import com.cinemax.cinemax.domain.config.BioskopConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -38,6 +42,9 @@ public class ApiPaymentController {
 
     @Autowired
     private PaymentGateway paymentGateway;
+
+    @Autowired
+    private BioskopConfigRepository configRepository;
 
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@RequestBody CheckoutRequestDTO request) {
@@ -105,6 +112,57 @@ public class ApiPaymentController {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/notification")
+    public ResponseEntity<?> notification(@RequestBody Map<String, Object> payload) {
+        try {
+            String orderIdStr = (String) payload.get("order_id");
+            String statusCode = (String) payload.get("status_code");
+            String grossAmount = (String) payload.get("gross_amount");
+            String signatureKey = (String) payload.get("signature_key");
+            String transactionStatus = (String) payload.get("transaction_status");
+
+            if (orderIdStr == null || transactionStatus == null) {
+                return ResponseEntity.badRequest().body("Invalid payload");
+            }
+
+            BioskopConfig config = configRepository.findById("SINGLETON").orElse(null);
+            if (config != null && config.getPaymentServerKey() != null && !config.getPaymentServerKey().isEmpty()) {
+                // Validasi Signature Key jika Server Key tersedia (Opsional tapi disarankan)
+                String serverKey = config.getPaymentServerKey();
+                String rawString = orderIdStr + statusCode + grossAmount + serverKey;
+                MessageDigest digest = MessageDigest.getInstance("SHA-512");
+                byte[] encodedhash = digest.digest(rawString.getBytes(StandardCharsets.UTF_8));
+                StringBuilder hexString = new StringBuilder(2 * encodedhash.length);
+                for (int i = 0; i < encodedhash.length; i++) {
+                    String hex = Integer.toHexString(0xff & encodedhash[i]);
+                    if(hex.length() == 1) {
+                        hexString.append('0');
+                    }
+                    hexString.append(hex);
+                }
+                String calculatedSignature = hexString.toString();
+                if (signatureKey != null && !calculatedSignature.equalsIgnoreCase(signatureKey)) {
+                    // Invalid signature
+                    return ResponseEntity.status(403).body("Invalid signature key");
+                }
+            }
+
+            Long transaksiId = Long.parseLong(orderIdStr);
+            Transaksi transaksi = transaksiRepository.findById(transaksiId)
+                    .orElseThrow(() -> new Exception("Transaksi tidak ditemukan"));
+
+            if (transactionStatus.equals("settlement") || transactionStatus.equals("capture")) {
+                transaksi.setStatus(Transaksi.StatusTransaksi.SUCCESS);
+                transaksiRepository.save(transaksi);
+            }
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("Webhook error: " + e.getMessage());
+            return ResponseEntity.status(500).build();
         }
     }
 }

@@ -39,7 +39,7 @@ public class SecurityConfig {
                                                                                                     // statis
                         .requestMatchers("/", "/login", "/register", "/register-process", "/lupa-password",
                                 "/forgot-password-process", "/reset-password", "/reset-password-process", "/jelajah",
-                                "/film/**", "/pilih-jadwal")
+                                "/film/**", "/pilih-jadwal", "/promo/**")
                         .permitAll() // Halaman publik
                         .requestMatchers("/admin/pengaturan", "/admin/pengaturan/**", "/admin/staf", "/admin/staf/**",
                                 "/admin/audit-log", "/admin/audit-log/**", "/admin/laporan", "/admin/laporan/**")

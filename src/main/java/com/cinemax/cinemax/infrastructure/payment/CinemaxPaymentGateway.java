@@ -31,8 +31,8 @@ public class CinemaxPaymentGateway implements PaymentGateway {
 
         String serverKey = config.getPaymentServerKey();
         
-        // Pilih URL Sandbox atau Production (Disini kita default ke Sandbox)
-        String apiUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+        // Pilih URL Sandbox atau Production (Disini kita default ke Production)
+        String apiUrl = "https://app.midtrans.com/snap/v1/transactions";
 
         // Setup Headers Auth Basic
         HttpHeaders headers = new HttpHeaders();

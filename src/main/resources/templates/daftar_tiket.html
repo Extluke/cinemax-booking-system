@@ -29,15 +29,15 @@
 
     <!-- Filter Tab Bar -->
     <div class="toolbar" style="margin-bottom:24px">
-      <button class="btn btn-primary">Semua Tiket</button>
-      <button class="btn btn-secondary">Tiket Aktif</button>
-      <button class="btn btn-secondary">Menunggu Pembayaran</button>
-      <button class="btn btn-secondary">Riwayat Selesai</button>
+      <a th:class="${activeTab == 'semua' ? 'btn btn-primary' : 'btn btn-secondary'}" href="/daftar-tiket?tab=semua">Semua Tiket</a>
+      <a th:class="${activeTab == 'aktif' ? 'btn btn-primary' : 'btn btn-secondary'}" href="/daftar-tiket?tab=aktif">Tiket Aktif</a>
+      <a th:class="${activeTab == 'pending' ? 'btn btn-primary' : 'btn btn-secondary'}" href="/daftar-tiket?tab=pending">Menunggu Pembayaran</a>
+      <a th:class="${activeTab == 'selesai' ? 'btn btn-primary' : 'btn btn-secondary'}" href="/daftar-tiket?tab=selesai">Riwayat Selesai</a>
     </div>
 
       <div th:if="${transaksiTiketMap == null || transaksiTiketMap.isEmpty()}" class="catalogue-empty">
-        <h2>Belum ada tiket</h2>
-        <p class="muted">Kamu belum melakukan pemesanan tiket apa pun.</p>
+        <h2 th:text="${activeTab == 'semua' ? 'Belum ada tiket' : (activeTab == 'aktif' ? 'Belum ada tiket aktif' : (activeTab == 'pending' ? 'Tidak ada tagihan tertunda' : 'Belum ada riwayat selesai'))}">Belum ada tiket</h2>
+        <p class="muted">Kamu belum melakukan pemesanan tiket apa pun pada kategori ini.</p>
       </div>
 
       <article th:each="entry : ${transaksiTiketMap}" class="card" th:with="transaksi=${entry.key}, tiketList=${entry.value}, jadwal=${tiketList.get(0).jadwal}">

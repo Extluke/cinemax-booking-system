@@ -124,6 +124,19 @@ public class PageController {
     }
 
     /**
+     * Menampilkan detail promosi berdasarkan ID.
+     */
+    @GetMapping("/promo/detail-{id}")
+    public String detailPromosi(@PathVariable Long id, Model model) {
+        Promosi promosi = promosiRepository.findById(id).orElse(null);
+        if (promosi == null || !promosi.getIsAktif()) {
+            return "redirect:/";
+        }
+        model.addAttribute("promosi", promosi);
+        return "detail_promosi";
+    }
+
+    /**
      * Menampilkan detail satu film berdasarkan ID, bukan file HTML statis.
      *
      * @param filmId ID film dari URL
@@ -258,18 +271,45 @@ public class PageController {
     }
 
     @GetMapping("/daftar-tiket")
-    public String daftarTiket(Model model) {
+    public String daftarTiket(@RequestParam(required = false, defaultValue = "semua") String tab, Model model) {
         String email = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication()
                 .getName();
         com.cinemax.cinemax.domain.user.User user = userRepository.findByEmail(email).orElse(null);
         if (user != null) {
             java.util.List<com.cinemax.cinemax.domain.booking.Tiket> allTikets = tiketRepository
                     .findByTransaksiPelangganOrderByTransaksiTanggalTransaksiDesc(user);
+            
+            LocalDateTime now = LocalDateTime.now();
             Map<com.cinemax.cinemax.domain.booking.Transaksi, java.util.List<com.cinemax.cinemax.domain.booking.Tiket>> grouped = new LinkedHashMap<>();
+            
             for (com.cinemax.cinemax.domain.booking.Tiket tiket : allTikets) {
-                grouped.computeIfAbsent(tiket.getTransaksi(), k -> new ArrayList<>()).add(tiket);
+                com.cinemax.cinemax.domain.booking.Transaksi tx = tiket.getTransaksi();
+                boolean isPast = tiket.getJadwal().getWaktuMulai().isBefore(now);
+                
+                boolean include = false;
+                if ("semua".equals(tab)) {
+                    include = true;
+                } else if ("aktif".equals(tab)) {
+                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS && !isPast) {
+                        include = true;
+                    }
+                } else if ("pending".equals(tab)) {
+                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.PENDING) {
+                        include = true;
+                    }
+                } else if ("selesai".equals(tab)) {
+                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.REFUND || 
+                        (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS && isPast)) {
+                        include = true;
+                    }
+                }
+                
+                if (include) {
+                    grouped.computeIfAbsent(tx, k -> new ArrayList<>()).add(tiket);
+                }
             }
             model.addAttribute("transaksiTiketMap", grouped);
+            model.addAttribute("activeTab", tab);
         }
         return "daftar_tiket";
     }
