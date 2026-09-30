@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import com.cinemax.cinemax.infrastructure.security.CustomAuthenticationSuccessHandler;
 
 @Configuration
 @EnableMethodSecurity

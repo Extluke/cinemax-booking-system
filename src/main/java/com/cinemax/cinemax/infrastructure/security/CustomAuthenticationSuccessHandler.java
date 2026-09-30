@@ -1,3 +1,8 @@
+/**
+ * Tujuan program: Menangani aksi setelah pengguna berhasil login, seperti pengarahan halaman berdasarkan role.
+ * Contributor: 'Aarif Rahmaan J. Faqiih
+ * Tanggal terakhir diubah: 1 Oktober 2026, 02:15 WIB
+ */
 package com.cinemax.cinemax.infrastructure.security;
 
 import com.cinemax.cinemax.domain.config.AuditLog;

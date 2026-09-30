@@ -1,3 +1,8 @@
+/**
+ * Tujuan program: Controller untuk manajemen promosi di halaman admin.
+ * Contributor: 'Aarif Rahmaan J. Faqiih
+ * Tanggal terakhir diubah: 1 Oktober 2026, 02:14 WIB
+ */
 package com.cinemax.cinemax.admin.controller;
 
 import com.cinemax.cinemax.domain.booking.Promosi;
@@ -51,7 +56,7 @@ public class AdminPromosiController {
         if (status != null && !status.isEmpty() && !status.equals("SEMUA")) {
             boolean isActiveFilter = status.equals("AKTIF");
             listPromosi = listPromosi.stream()
-                .filter(p -> p.getIsAktif() == isActiveFilter)
+                .filter(p -> Boolean.TRUE.equals(p.getIsAktif()) == isActiveFilter)
                 .collect(Collectors.toList());
         }
         
@@ -68,7 +73,7 @@ public class AdminPromosiController {
         }
 
         // Active promos for preview carousel
-        List<Promosi> activePromos = listPromosi.stream().filter(Promosi::getIsAktif).collect(Collectors.toList());
+        List<Promosi> activePromos = listPromosi.stream().filter(p -> Boolean.TRUE.equals(p.getIsAktif())).collect(Collectors.toList());
         if (activePromos.isEmpty()) {
             activePromos = promosiRepository.findByIsAktifOrderByTanggalMulaiDesc(true);
         }
@@ -130,7 +135,9 @@ public class AdminPromosiController {
     @GetMapping("/edit-promosi")
     public String editPromosiForm(@RequestParam Long id, Model model) {
         Promosi promosi = promosiRepository.findById(id).orElse(null);
-        if (promosi == null) return "redirect:/admin/manajemen-promosi?error=notfound";
+        if (promosi == null) {
+            return "redirect:/admin/manajemen-promosi?error=notfound";
+        }
         
         model.addAttribute("promosi", promosi);
         model.addAttribute("activePage", "promosi");
@@ -147,7 +154,9 @@ public class AdminPromosiController {
                                     @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
         
         Promosi promosi = promosiRepository.findById(id).orElse(null);
-        if (promosi == null) return "redirect:/admin/manajemen-promosi?error=notfound";
+        if (promosi == null) {
+            return "redirect:/admin/manajemen-promosi?error=notfound";
+        }
         
         promosi.setJudul(judul);
         promosi.setTargetUrl(targetUrl != null && !targetUrl.isEmpty() ? targetUrl : null);
@@ -166,7 +175,9 @@ public class AdminPromosiController {
                 
                 String uploadDir = "uploads/promosi/";
                 Path uploadPath = Paths.get(uploadDir);
-                if (!Files.exists(uploadPath)) Files.createDirectories(uploadPath);
+                if (!Files.exists(uploadPath)) {
+                    Files.createDirectories(uploadPath);
+                }
                 
                 String fileName = UUID.randomUUID().toString() + "_" + 
                         posterFile.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
