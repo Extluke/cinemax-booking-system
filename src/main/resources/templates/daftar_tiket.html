@@ -43,7 +43,7 @@
       <article th:each="entry : ${transaksiTiketMap}" class="card" th:with="transaksi=${entry.key}, tiketList=${entry.value}, jadwal=${tiketList.get(0).jadwal}">
         <div class="page-head" style="margin-bottom:12px">
           <div>
-            <span class="badge" th:classappend="${transaksi.status.name() == 'SUCCESS'} ? 'badge-success' : (${transaksi.status.name() == 'PENDING'} ? 'badge-warning' : 'badge-danger')" th:text="${transaksi.status.name()}">STATUS</span>
+            <span class="badge" th:classappend="${transaksi.refundStatus.name() == 'REJECTED'} ? 'badge-danger' : (${transaksi.refundStatus.name() == 'REFUNDED'} ? 'badge-success' : (${transaksi.refundStatus.name() == 'PENDING_REFUND' || transaksi.refundStatus.name() == 'APPROVED_REFUND'} ? 'badge-warning' : (${transaksi.status.name() == 'SUCCESS'} ? 'badge-success' : (${transaksi.status.name() == 'PENDING'} ? 'badge-warning' : 'badge-danger'))))" th:text="${transaksi.refundStatus.name() == 'REJECTED' ? 'PAID (REFUND DITOLAK)' : (transaksi.refundStatus.name() == 'REFUNDED' ? 'SUKSES (DANA DIKEMBALIKAN)' : (transaksi.refundStatus.name() == 'PENDING_REFUND' ? 'MENUNGGU PERSETUJUAN REFUND' : (transaksi.refundStatus.name() == 'APPROVED_REFUND' ? 'REFUND DITERIMA' : transaksi.status.name())))}">STATUS</span>
             <h2 style="margin-top:8px" th:text="${jadwal.film.judul}">Judul Film</h2>
             <!-- Menampilkan jadwal, nama studio, dan tipe studio dari database -->
             <p class="muted" th:text="${#temporals.format(jadwal.waktuMulai, 'EEEE, dd MMMM yyyy · HH:mm')} + ' WIB · ' + ${jadwal.studio.nama} + (${jadwal.studio.tipe != null ? ' (' + jadwal.studio.tipe.nama + ')' : ''}) + ' (' + ${#strings.listJoin(tiketList.![nomorKursi], ', ')} + ')'">Detail Jadwal</p>
@@ -54,7 +54,7 @@
           </div>
         </div>
         <div class="toolbar" style="margin-top:14px;justify-content:flex-end">
-          <a th:if="${transaksi.status.name() == 'SUCCESS'}" class="btn btn-primary" th:href="@{/detail-tiket(transaksiId=${transaksi.id})}">Buka E-Tiket & QR Code →</a>
+          <a th:if="${transaksi.status.name() == 'SUCCESS' || transaksi.refundStatus.name() != 'NONE'}" class="btn btn-primary" th:href="@{/detail-tiket(transaksiId=${transaksi.id})}" th:text="${transaksi.refundStatus.name() == 'NONE' || transaksi.refundStatus.name() == 'REJECTED' ? 'Buka E-Tiket & QR Code →' : 'Lihat Status Refund →'}">Lihat detail</a>
           <a th:if="${transaksi.status.name() == 'PENDING'}" class="btn btn-primary" th:href="@{/faktur(transaksiId=${transaksi.id})}">Lanjut Pembayaran →</a>
         </div>
       </article>

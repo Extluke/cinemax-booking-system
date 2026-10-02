@@ -11,12 +11,12 @@
     <a class="brand" href="/"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : CINEPLEX}">CINEPLEX</span></a>
     <div class="toolbar">
       <a class="btn btn-secondary" href="/daftar-tiket">← Daftar Tiket</a>
-      <button class="btn btn-primary" onclick="window.print()">🖨️ Cetak Tiket</button>
+      <button class="btn btn-primary" onclick="window.print()" th:if="${transaksi.refundStatus.name() == 'NONE' || transaksi.refundStatus.name() == 'REJECTED'}">🖨️ Cetak Tiket</button>
     </div>
   </header>
 
   <main class="user-content">
-    <section class="ticket" role="region" aria-label="Tiket Nonton Bioskop">
+    <section class="ticket" role="region" aria-label="Tiket Nonton Bioskop" th:if="${transaksi.refundStatus.name() == 'NONE' || transaksi.refundStatus.name() == 'REJECTED'}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div class="brand"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : 'CINEPLEX'}">CINEPLEX</span></div>
         <span class="badge" th:classappend="${transaksi.status.name() == 'SUCCESS'} ? 'badge-success' : 'badge-warning'" style="margin-top:4px" th:text="${transaksi.status.name()}">LUNAS</span>
@@ -52,23 +52,38 @@
     </section>
 
     <!-- FORM REFUND TIKET -->
-    <section class="card" style="margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto;" th:if="${transaksi.status.name() == 'SUCCESS' && transaksi.refundStatus.name() == 'NONE'}">
+    <section class="card" style="margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto;" th:if="${transaksi.status.name() == 'SUCCESS' && (transaksi.refundStatus.name() == 'NONE' || transaksi.refundStatus.name() == 'REJECTED') && refundMemenuhiBatasWaktu}">
       <h2 style="font-size: 1.25rem;">Ajukan Refund Tiket</h2>
-      <p class="muted" style="font-size: 13px; margin-bottom: 12px;">Kamu dapat membatalkan pesanan dan meminta refund jika memenuhi syarat & ketentuan.</p>
+      <p class="muted" style="font-size: 13px; margin-bottom: 12px;">Pengajuan refund harus dilakukan sebelum batas H-<span th:text="${appConfig != null ? appConfig.refundTimeLimitHours : 2}">2</span> jam sebelum film dimulai dan hanya untuk transaksi yang sudah dibayar.</p>
       <form th:action="@{/ajukan-refund}" method="post">
         <input type="hidden" name="transaksiId" th:value="${transaksi.id}" />
         <div style="margin-bottom: 12px;">
           <label style="display:block; margin-bottom: 4px;">Alasan Refund:</label>
           <textarea name="alasan" class="input" rows="3" required placeholder="Tuliskan alasan pengajuan refund..."></textarea>
         </div>
-        <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah kamu yakin ingin mengajukan refund? Tiket akan hangus dan tidak dapat dibatalkan.');">Ajukan Refund</button>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; margin-bottom: 4px;">Nama pemilik rekening / e-wallet:</label>
+          <input name="namaPemilikRekening" class="input" maxlength="120" required>
+        </div>
+        <div style="margin-bottom: 12px;">
+          <label style="display:block; margin-bottom: 4px;">Nomor rekening / e-wallet:</label>
+          <input name="nomorRekening" class="input" maxlength="100" pattern="[A-Za-z0-9 .-]{4,100}" required>
+        </div>
+        <button type="submit" class="btn btn-danger" onclick="return confirm('Apakah kamu yakin ingin mengajukan refund?');">Ajukan Refund</button>
       </form>
+    </section>
+
+    <section class="card" style="margin-top:24px;max-width:480px;margin-left:auto;margin-right:auto;" th:if="${transaksi.status.name() == 'SUCCESS' && transaksi.refundStatus.name() == 'NONE' && !refundMemenuhiBatasWaktu}">
+      Refund tidak dapat diajukan karena batas H-<span th:text="${appConfig != null ? appConfig.refundTimeLimitHours : 2}">2</span> jam sebelum jadwal film telah terlewati.
     </section>
     
     <section class="card" style="margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto;" th:if="${transaksi.refundStatus.name() != 'NONE'}">
       <h2 style="font-size: 1.25rem;">Status Refund</h2>
-      <p class="muted" style="font-size: 13px; margin-bottom: 12px;">Kamu telah mengajukan refund untuk transaksi ini.</p>
-      <div style="padding: 12px; background: #fff3cd; border-left: 4px solid #ffc107; color: #856404; font-weight: bold;" th:text="${transaksi.refundStatus.name()}">PENDING_REFUND</div>
+      <p class="muted" style="font-size: 13px; margin-bottom: 12px;">Status pengajuan pengembalian dana:</p>
+      <div style="padding:12px;background:#fff3cd;border-left:4px solid #ffc107;color:#856404;font-weight:bold;"
+           th:text="${transaksi.refundStatus.name() == 'PENDING_REFUND' ? 'Menunggu persetujuan admin' : (transaksi.refundStatus.name() == 'APPROVED_REFUND' ? 'Pengajuan diterima, pengembalian dana diproses' : (transaksi.refundStatus.name() == 'REFUNDED' ? 'Sukses (dana dikembalikan)' : 'Ditolak (transaksi kembali paid)'))}">Status refund</div>
+      <p th:if="${refund != null && refund.status.name() == 'REJECTED'}" style="margin-top:10px;"><strong>Alasan penolakan:</strong> <span th:text="${refund.catatanAdmin}">Alasan admin</span></p>
+      <p th:if="${refund != null}" style="margin-top:10px;"><strong>Alasan pengajuan:</strong> <span th:text="${refund.alasan}">Alasan pengajuan</span></p>
     </section>
   </main>
 

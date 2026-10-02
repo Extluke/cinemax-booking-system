@@ -6,7 +6,7 @@
  * NIM: 103112430182
  * Role: User
  * Kelas: IF-12-07
- * Terakhir diubah: 27 September 2026, 00:00 WIB
+ * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
  */
 package com.cinemax.cinemax.admin.controller;
 
@@ -15,6 +15,8 @@ import com.cinemax.cinemax.domain.booking.PromosiRepository;
 import com.cinemax.cinemax.domain.movie.Film;
 import com.cinemax.cinemax.domain.movie.FilmRepository;
 import com.cinemax.cinemax.domain.movie.GenreRepository;
+import com.cinemax.cinemax.domain.config.BioskopConfig;
+import com.cinemax.cinemax.domain.config.BioskopConfigRepository;
 import com.cinemax.cinemax.domain.schedule.Jadwal;
 import com.cinemax.cinemax.domain.schedule.JadwalRepository;
 import com.cinemax.cinemax.domain.schedule.Studio;
@@ -58,6 +60,7 @@ public class PageController {
     private final com.cinemax.cinemax.domain.booking.TransaksiRepository transaksiRepository;
     private final com.cinemax.cinemax.domain.user.UserRepository userRepository;
     private final com.cinemax.cinemax.domain.booking.RefundRepository refundRepository;
+    private final BioskopConfigRepository configRepository;
 
     /**
      * Membuat controller dengan seluruh dependency pembacaan konten publik.
@@ -73,7 +76,8 @@ public class PageController {
             com.cinemax.cinemax.domain.booking.TiketRepository tiketRepository,
             com.cinemax.cinemax.domain.booking.TransaksiRepository transaksiRepository,
             com.cinemax.cinemax.domain.user.UserRepository userRepository,
-            com.cinemax.cinemax.domain.booking.RefundRepository refundRepository) {
+            com.cinemax.cinemax.domain.booking.RefundRepository refundRepository,
+            BioskopConfigRepository configRepository) {
         this.filmRepository = filmRepository;
         this.genreRepository = genreRepository;
         this.jadwalRepository = jadwalRepository;
@@ -83,6 +87,7 @@ public class PageController {
         this.transaksiRepository = transaksiRepository;
         this.userRepository = userRepository;
         this.refundRepository = refundRepository;
+        this.configRepository = configRepository;
     }
 
     /**
@@ -222,11 +227,11 @@ public class PageController {
         List<com.cinemax.cinemax.domain.booking.Tiket> tiketTerjual = tiketRepository.findByJadwalIdAndStatus(jadwalId,
                 com.cinemax.cinemax.domain.booking.Tiket.StatusTiket.VALID);
         java.util.Set<String> kursiTerisi = tiketTerjual.stream()
-                .map(com.cinemax.cinemax.domain.booking.Tiket::getNomorKursi)
+                .map(tiket -> tiket.getNomorKursi())
                 .collect(java.util.stream.Collectors.toSet());
 
-        semuaKursi.sort(java.util.Comparator.comparing(com.cinemax.cinemax.domain.schedule.Kursi::getBaris)
-                .thenComparing(com.cinemax.cinemax.domain.schedule.Kursi::getKolom));
+        semuaKursi.sort(java.util.Comparator.comparing((com.cinemax.cinemax.domain.schedule.Kursi kursi) -> kursi.getBaris())
+                .thenComparing(kursi -> kursi.getKolom()));
 
         model.addAttribute("jadwal", jadwal);
         model.addAttribute("semuaKursi", semuaKursi);
@@ -290,7 +295,10 @@ public class PageController {
                 if ("semua".equals(tab)) {
                     include = true;
                 } else if ("aktif".equals(tab)) {
-                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS && !isPast) {
+                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS
+                            && !isPast
+                            && (tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.NONE
+                                    || tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED)) {
                         include = true;
                     }
                 } else if ("pending".equals(tab)) {
@@ -298,7 +306,11 @@ public class PageController {
                         include = true;
                     }
                 } else if ("selesai".equals(tab)) {
-                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.REFUND || 
+                    if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.REFUND ||
+                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.PENDING_REFUND ||
+                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.APPROVED_REFUND ||
+                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REFUNDED ||
+                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED ||
                         (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS && isPast)) {
                         include = true;
                     }
@@ -325,16 +337,41 @@ public class PageController {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Tiket tidak ditemukan.");
         }
 
+        String currentUserEmail = org.springframework.security.core.context.SecurityContextHolder.getContext()
+                .getAuthentication().getName();
+        if (!transaksi.getPelanggan().getEmail().equals(currentUserEmail)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Anda tidak berhak melihat tiket ini.");
+        }
+
+        BioskopConfig config = configRepository.findById("SINGLETON").orElseGet(BioskopConfig::new);
+        LocalDateTime batasRefund = tiketList.get(0).getJadwal().getWaktuMulai()
+                .minusHours(Math.max(0, config.getRefundTimeLimitHours()));
+        boolean refundMemenuhiBatasWaktu = LocalDateTime.now().isBefore(batasRefund)
+                || LocalDateTime.now().isEqual(batasRefund);
+        com.cinemax.cinemax.domain.booking.Refund refund = refundRepository
+                .findFirstByTransaksiIdOrderByWaktuPengajuanDesc(transaksiId).orElse(null);
+
         model.addAttribute("transaksi", transaksi);
         model.addAttribute("tiketList", tiketList);
         model.addAttribute("jadwal", tiketList.get(0).getJadwal());
+        model.addAttribute("refund", refund);
+        model.addAttribute("refundMemenuhiBatasWaktu", refundMemenuhiBatasWaktu);
 
         return "detail_tiket";
     }
 
+    /**
+     * Menerima refund yang hanya diajukan pemilik transaksi paid dan lolos batas waktu.
+     * Pra-kondisi: pembayaran sukses, jadwal belum melewati batas H-, dan data valid.
+     * Pasca-kondisi: refund menunggu admin dan transaksi menampilkan status refund baru.
+     */
     @org.springframework.web.bind.annotation.PostMapping("/ajukan-refund")
     @Transactional(readOnly = false)
-    public String ajukanRefund(@RequestParam Long transaksiId, @RequestParam String alasan) {
+    public String ajukanRefund(
+            @RequestParam Long transaksiId,
+            @RequestParam String alasan,
+            @RequestParam String nomorRekening,
+            @RequestParam String namaPemilikRekening) {
         com.cinemax.cinemax.domain.booking.Transaksi transaksi = transaksiRepository.findById(transaksiId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaksi tidak ditemukan."));
 
@@ -347,13 +384,34 @@ public class PageController {
         }
 
         if (transaksi.getStatus() != com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS ||
-                transaksi.getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.NONE) {
+                (transaksi.getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.NONE
+                        && transaksi.getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refund tidak dapat diajukan.");
+        }
+
+        if (alasan == null || alasan.isBlank() || alasan.length() > 2000
+                || nomorRekening == null || !nomorRekening.matches("[A-Za-z0-9 .-]{4,100}")
+                || namaPemilikRekening == null || namaPemilikRekening.isBlank() || namaPemilikRekening.length() > 120) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Alasan dan data rekening tidak valid.");
+        }
+
+        List<com.cinemax.cinemax.domain.booking.Tiket> tiketTransaksi = tiketRepository.findByTransaksiId(transaksiId);
+        if (tiketTransaksi.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Transaksi tidak memiliki tiket yang valid.");
+        }
+        BioskopConfig config = configRepository.findById("SINGLETON").orElseGet(BioskopConfig::new);
+        LocalDateTime batasRefund = tiketTransaksi.get(0).getJadwal().getWaktuMulai()
+                .minusHours(Math.max(0, config.getRefundTimeLimitHours()));
+        if (LocalDateTime.now().isAfter(batasRefund)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Refund hanya dapat diajukan sebelum batas H-" + config.getRefundTimeLimitHours() + " jam.");
         }
 
         com.cinemax.cinemax.domain.booking.Refund refund = new com.cinemax.cinemax.domain.booking.Refund();
         refund.setTransaksi(transaksi);
         refund.setAlasan(alasan);
+        refund.setNomorRekening(nomorRekening.trim());
+        refund.setNamaPemilikRekening(namaPemilikRekening.trim());
         refund.setStatus(com.cinemax.cinemax.domain.booking.Refund.StatusRefund.PENDING);
         refund.setDiajukanOleh(currentUserEmail);
         refund.setWaktuPengajuan(LocalDateTime.now());

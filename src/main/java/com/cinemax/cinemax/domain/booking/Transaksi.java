@@ -1,3 +1,7 @@
+/**
+ * Tujuan program: Mewakili transaksi pembayaran dan status refund pelanggan.
+ * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
+ */
 package com.cinemax.cinemax.domain.booking;
 
 import com.cinemax.cinemax.domain.user.User;
@@ -37,6 +41,7 @@ public class Transaksi {
     public enum RefundStatus {
         NONE,
         PENDING_REFUND,
+        APPROVED_REFUND,
         REFUNDED,
         REJECTED
     }

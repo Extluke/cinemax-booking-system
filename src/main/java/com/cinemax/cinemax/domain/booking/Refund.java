@@ -1,3 +1,7 @@
+/**
+ * Tujuan program: Menyimpan alasan, status, dan tujuan rekening pengajuan refund.
+ * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
+ */
 package com.cinemax.cinemax.domain.booking;
 
 
@@ -19,6 +23,12 @@ public class Refund {
     @Column(columnDefinition = "TEXT", nullable = false)
     private String alasan;
 
+    @Column(length = 100)
+    private String nomorRekening;
+
+    @Column(length = 120)
+    private String namaPemilikRekening;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusRefund status;
@@ -32,6 +42,7 @@ public class Refund {
     @Column(columnDefinition = "TEXT")
     private String catatanAdmin;
 
+    /** Tahapan persetujuan dan penyelesaian pengembalian dana. */
     public enum StatusRefund {
         PENDING,
         APPROVED,
@@ -46,6 +57,10 @@ public class Refund {
     public void setTransaksi(Transaksi transaksi) { this.transaksi = transaksi; }
     public String getAlasan() { return alasan; }
     public void setAlasan(String alasan) { this.alasan = alasan; }
+    public String getNomorRekening() { return nomorRekening; }
+    public void setNomorRekening(String nomorRekening) { this.nomorRekening = nomorRekening; }
+    public String getNamaPemilikRekening() { return namaPemilikRekening; }
+    public void setNamaPemilikRekening(String namaPemilikRekening) { this.namaPemilikRekening = namaPemilikRekening; }
     public StatusRefund getStatus() { return status; }
     public void setStatus(StatusRefund status) { this.status = status; }
     public String getDiajukanOleh() { return diajukanOleh; }
