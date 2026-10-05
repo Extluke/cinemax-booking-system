@@ -2,9 +2,9 @@
  * Tujuan program: Menyediakan halaman publik CineMax menggunakan data film,
  * banner CMS, dan jadwal yang tersimpan di database.
  *
- * Contributor: 'Aarif Rahmaan J. Faqiih
- * NIM: 103112430182
- * Role: User
+
+
+
  * Kelas: IF-12-07
  * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
  */
@@ -230,8 +230,9 @@ public class PageController {
                 .map(tiket -> tiket.getNomorKursi())
                 .collect(java.util.stream.Collectors.toSet());
 
-        semuaKursi.sort(java.util.Comparator.comparing((com.cinemax.cinemax.domain.schedule.Kursi kursi) -> kursi.getBaris())
-                .thenComparing(kursi -> kursi.getKolom()));
+        semuaKursi.sort(
+                java.util.Comparator.comparing((com.cinemax.cinemax.domain.schedule.Kursi kursi) -> kursi.getBaris())
+                        .thenComparing(kursi -> kursi.getKolom()));
 
         model.addAttribute("jadwal", jadwal);
         model.addAttribute("semuaKursi", semuaKursi);
@@ -283,14 +284,14 @@ public class PageController {
         if (user != null) {
             java.util.List<com.cinemax.cinemax.domain.booking.Tiket> allTikets = tiketRepository
                     .findByTransaksiPelangganOrderByTransaksiTanggalTransaksiDesc(user);
-            
+
             LocalDateTime now = LocalDateTime.now();
             Map<com.cinemax.cinemax.domain.booking.Transaksi, java.util.List<com.cinemax.cinemax.domain.booking.Tiket>> grouped = new LinkedHashMap<>();
-            
+
             for (com.cinemax.cinemax.domain.booking.Tiket tiket : allTikets) {
                 com.cinemax.cinemax.domain.booking.Transaksi tx = tiket.getTransaksi();
                 boolean isPast = tiket.getJadwal().getWaktuMulai().isBefore(now);
-                
+
                 boolean include = false;
                 if ("semua".equals(tab)) {
                     include = true;
@@ -307,15 +308,20 @@ public class PageController {
                     }
                 } else if ("selesai".equals(tab)) {
                     if (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.REFUND ||
-                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.PENDING_REFUND ||
-                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.APPROVED_REFUND ||
-                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REFUNDED ||
-                        tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED ||
-                        (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS && isPast)) {
+                            tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.PENDING_REFUND
+                            ||
+                            tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.APPROVED_REFUND
+                            ||
+                            tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REFUNDED
+                            ||
+                            tx.getRefundStatus() == com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED
+                            ||
+                            (tx.getStatus() == com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS
+                                    && isPast)) {
                         include = true;
                     }
                 }
-                
+
                 if (include) {
                     grouped.computeIfAbsent(tx, k -> new ArrayList<>()).add(tiket);
                 }
@@ -361,9 +367,12 @@ public class PageController {
     }
 
     /**
-     * Menerima refund yang hanya diajukan pemilik transaksi paid dan lolos batas waktu.
-     * Pra-kondisi: pembayaran sukses, jadwal belum melewati batas H-, dan data valid.
-     * Pasca-kondisi: refund menunggu admin dan transaksi menampilkan status refund baru.
+     * Menerima refund yang hanya diajukan pemilik transaksi paid dan lolos batas
+     * waktu.
+     * Pra-kondisi: pembayaran sukses, jadwal belum melewati batas H-, dan data
+     * valid.
+     * Pasca-kondisi: refund menunggu admin dan transaksi menampilkan status refund
+     * baru.
      */
     @org.springframework.web.bind.annotation.PostMapping("/ajukan-refund")
     @Transactional(readOnly = false)
@@ -385,7 +394,8 @@ public class PageController {
 
         if (transaksi.getStatus() != com.cinemax.cinemax.domain.booking.Transaksi.StatusTransaksi.SUCCESS ||
                 (transaksi.getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.NONE
-                        && transaksi.getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED)) {
+                        && transaksi
+                                .getRefundStatus() != com.cinemax.cinemax.domain.booking.Transaksi.RefundStatus.REJECTED)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Refund tidak dapat diajukan.");
         }
 

@@ -1,8 +1,8 @@
 /**
  * Tujuan program: Menyediakan kueri film publik untuk katalog pelanggan.
- * Contributor: 'Aarif Rahmaan J. Faqiih
- * NIM: 103112430182
- * Role: User
+
+
+
  * Kelas: IF-12-07
  * Terakhir diubah: 27 September 2026, 00:00 WIB
  */

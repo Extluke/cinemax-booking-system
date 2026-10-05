@@ -64,8 +64,8 @@
       </div>
 
       <!-- Midtrans Snap Script -->
-      <!-- Menggunakan production url. -->
-      <script src="https://app.midtrans.com/snap/snap.js" th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
+      <script th:src="${appConfig != null and appConfig.isProduction ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js'}" 
+              th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
       <script th:inline="javascript">
         /*<![CDATA[*/
         const snapToken = /*[[${token}]]*/ null;

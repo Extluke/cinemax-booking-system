@@ -1,6 +1,6 @@
 /**
  * Tujuan program: Controller untuk manajemen promosi di halaman admin.
- * Contributor: 'Aarif Rahmaan J. Faqiih
+
  * Tanggal terakhir diubah: 1 Oktober 2026, 02:14 WIB
  */
 package com.cinemax.cinemax.admin.controller;
@@ -38,50 +38,51 @@ public class AdminPromosiController {
     private AuditService auditService;
 
     @GetMapping("/manajemen-promosi")
-    public String manajemenPromosi(Model model, 
-                                   @RequestParam(required = false) String search,
-                                   @RequestParam(required = false) String status,
-                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
-                                   @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir) {
-        
+    public String manajemenPromosi(Model model,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir) {
+
         List<Promosi> listPromosi = promosiRepository.findAllByOrderByTanggalMulaiDesc();
-        
+
         // Filtering
         if (search != null && !search.isEmpty()) {
             listPromosi = listPromosi.stream()
-                .filter(p -> p.getJudul().toLowerCase().contains(search.toLowerCase()))
-                .collect(Collectors.toList());
+                    .filter(p -> p.getJudul().toLowerCase().contains(search.toLowerCase()))
+                    .collect(Collectors.toList());
         }
-        
+
         if (status != null && !status.isEmpty() && !status.equals("SEMUA")) {
             boolean isActiveFilter = status.equals("AKTIF");
             listPromosi = listPromosi.stream()
-                .filter(p -> Boolean.TRUE.equals(p.getIsAktif()) == isActiveFilter)
-                .collect(Collectors.toList());
+                    .filter(p -> Boolean.TRUE.equals(p.getIsAktif()) == isActiveFilter)
+                    .collect(Collectors.toList());
         }
-        
+
         if (tanggalMulai != null) {
             listPromosi = listPromosi.stream()
-                .filter(p -> !p.getTanggalMulai().isBefore(tanggalMulai))
-                .collect(Collectors.toList());
+                    .filter(p -> !p.getTanggalMulai().isBefore(tanggalMulai))
+                    .collect(Collectors.toList());
         }
-        
+
         if (tanggalAkhir != null) {
             listPromosi = listPromosi.stream()
-                .filter(p -> !p.getTanggalAkhir().isAfter(tanggalAkhir))
-                .collect(Collectors.toList());
+                    .filter(p -> !p.getTanggalAkhir().isAfter(tanggalAkhir))
+                    .collect(Collectors.toList());
         }
 
         // Active promos for preview carousel
-        List<Promosi> activePromos = listPromosi.stream().filter(p -> Boolean.TRUE.equals(p.getIsAktif())).collect(Collectors.toList());
+        List<Promosi> activePromos = listPromosi.stream().filter(p -> Boolean.TRUE.equals(p.getIsAktif()))
+                .collect(Collectors.toList());
         if (activePromos.isEmpty()) {
             activePromos = promosiRepository.findByIsAktifOrderByTanggalMulaiDesc(true);
         }
-        
+
         model.addAttribute("listPromosi", listPromosi);
         model.addAttribute("activePromos", activePromos);
         model.addAttribute("activePage", "promosi");
-        
+
         return "admin/manajemen_promosi";
     }
 
@@ -93,19 +94,19 @@ public class AdminPromosiController {
 
     @PostMapping("/tambah-promosi")
     public String tambahPromosiSubmit(@RequestParam String judul,
-                                      @RequestParam(required = false) String targetUrl,
-                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
-                                      @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir,
-                                      @RequestParam(required = false) String isAktif,
-                                      @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
-        
+            @RequestParam(required = false) String targetUrl,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir,
+            @RequestParam(required = false) String isAktif,
+            @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
+
         Promosi promosi = new Promosi();
         promosi.setJudul(judul);
         promosi.setTargetUrl(targetUrl != null && !targetUrl.isEmpty() ? targetUrl : null);
         promosi.setTanggalMulai(tanggalMulai);
         promosi.setTanggalAkhir(tanggalAkhir);
         promosi.setIsAktif(isAktif != null && isAktif.equals("on"));
-        
+
         if (posterFile != null && !posterFile.isEmpty()) {
             try {
                 String uploadDir = "uploads/promosi/";
@@ -113,7 +114,7 @@ public class AdminPromosiController {
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
                 }
-                String fileName = UUID.randomUUID().toString() + "_" + 
+                String fileName = UUID.randomUUID().toString() + "_" +
                         posterFile.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
                 Path filePath = uploadPath.resolve(fileName);
                 Files.copy(posterFile.getInputStream(), filePath);
@@ -125,45 +126,46 @@ public class AdminPromosiController {
         } else {
             promosi.setPosterUrl("/img/poster_placeholder.jpg");
         }
-        
+
         promosiRepository.save(promosi);
-        auditService.log(AuditLog.ActionType.CREATE, "Promosi: " + promosi.getJudul(), "Menambahkan banner promosi baru");
-        
+        auditService.log(AuditLog.ActionType.CREATE, "Promosi: " + promosi.getJudul(),
+                "Menambahkan banner promosi baru");
+
         return "redirect:/admin/manajemen-promosi?success=true";
     }
-    
+
     @GetMapping("/edit-promosi")
     public String editPromosiForm(@RequestParam Long id, Model model) {
         Promosi promosi = promosiRepository.findById(id).orElse(null);
         if (promosi == null) {
             return "redirect:/admin/manajemen-promosi?error=notfound";
         }
-        
+
         model.addAttribute("promosi", promosi);
         model.addAttribute("activePage", "promosi");
         return "admin/tambah_promosi"; // Re-use the form for edit
     }
-    
+
     @PostMapping("/edit-promosi")
     public String editPromosiSubmit(@RequestParam Long id,
-                                    @RequestParam String judul,
-                                    @RequestParam(required = false) String targetUrl,
-                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
-                                    @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir,
-                                    @RequestParam(required = false) String isAktif,
-                                    @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
-        
+            @RequestParam String judul,
+            @RequestParam(required = false) String targetUrl,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalMulai,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate tanggalAkhir,
+            @RequestParam(required = false) String isAktif,
+            @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
+
         Promosi promosi = promosiRepository.findById(id).orElse(null);
         if (promosi == null) {
             return "redirect:/admin/manajemen-promosi?error=notfound";
         }
-        
+
         promosi.setJudul(judul);
         promosi.setTargetUrl(targetUrl != null && !targetUrl.isEmpty() ? targetUrl : null);
         promosi.setTanggalMulai(tanggalMulai);
         promosi.setTanggalAkhir(tanggalAkhir);
         promosi.setIsAktif(isAktif != null && isAktif.equals("on"));
-        
+
         if (posterFile != null && !posterFile.isEmpty()) {
             try {
                 // Hapus poster lama
@@ -172,14 +174,14 @@ public class AdminPromosiController {
                     Path oldFilePath = Paths.get("uploads/promosi/").resolve(oldFileName);
                     Files.deleteIfExists(oldFilePath);
                 }
-                
+
                 String uploadDir = "uploads/promosi/";
                 Path uploadPath = Paths.get(uploadDir);
                 if (!Files.exists(uploadPath)) {
                     Files.createDirectories(uploadPath);
                 }
-                
-                String fileName = UUID.randomUUID().toString() + "_" + 
+
+                String fileName = UUID.randomUUID().toString() + "_" +
                         posterFile.getOriginalFilename().replaceAll("[^a-zA-Z0-9\\.\\-]", "_");
                 Path filePath = uploadPath.resolve(fileName);
                 Files.copy(posterFile.getInputStream(), filePath);
@@ -188,9 +190,10 @@ public class AdminPromosiController {
                 e.printStackTrace();
             }
         }
-        
+
         promosiRepository.save(promosi);
-        auditService.log(AuditLog.ActionType.UPDATE, "Promosi: " + promosi.getJudul(), "Mengubah banner promosi ID " + promosi.getId());
+        auditService.log(AuditLog.ActionType.UPDATE, "Promosi: " + promosi.getJudul(),
+                "Mengubah banner promosi ID " + promosi.getId());
         return "redirect:/admin/manajemen-promosi?updated=true";
     }
 
@@ -213,7 +216,7 @@ public class AdminPromosiController {
         }
         return "redirect:/admin/manajemen-promosi?deleted=true";
     }
-    
+
     @PostMapping("/toggle-promosi/{id}")
     public String togglePromosi(@PathVariable Long id) {
         Promosi promosi = promosiRepository.findById(id).orElse(null);
@@ -221,7 +224,8 @@ public class AdminPromosiController {
             String namaPromosi = promosi.getJudul();
             promosi.setIsAktif(!promosi.getIsAktif());
             promosiRepository.save(promosi);
-            auditService.log(AuditLog.ActionType.UPDATE, "Promosi: " + namaPromosi, "Mengubah status aktif menjadi " + promosi.getIsAktif());
+            auditService.log(AuditLog.ActionType.UPDATE, "Promosi: " + namaPromosi,
+                    "Mengubah status aktif menjadi " + promosi.getIsAktif());
         }
         return "redirect:/admin/manajemen-promosi?updated=true";
     }

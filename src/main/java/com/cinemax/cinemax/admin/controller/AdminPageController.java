@@ -1,8 +1,8 @@
 /**
  * Tujuan program: Menyediakan halaman dan operasi administrasi CineMax.
- * Contributor: 'Aarif Rahmaan J. Faqiih
- * NIM: 103112430182
- * Role: User
+
+
+
  * Kelas: IF-12-07
  * Terakhir diubah: 27 September 2026, 00:00 WIB
  */
@@ -96,10 +96,21 @@ public class AdminPageController {
         public long tiketTerjual;
         public long totalKapasitasHariIni;
 
-        public String getNamaStudio() { return namaStudio; }
-        public int getPersentase() { return persentase; }
-        public long getTiketTerjual() { return tiketTerjual; }
-        public long getTotalKapasitasHariIni() { return totalKapasitasHariIni; }
+        public String getNamaStudio() {
+            return namaStudio;
+        }
+
+        public int getPersentase() {
+            return persentase;
+        }
+
+        public long getTiketTerjual() {
+            return tiketTerjual;
+        }
+
+        public long getTotalKapasitasHariIni() {
+            return totalKapasitasHariIni;
+        }
     }
 
     @GetMapping("/dashboard")
@@ -132,7 +143,9 @@ public class AdminPageController {
             long kapasitasTotal = jumlahJadwal * kapasitas;
 
             StudioOccupancyDTO dto = new StudioOccupancyDTO();
-            String tipeStudio = (studio.getTipe() != null && studio.getTipe().getNama() != null) ? studio.getTipe().getNama() : "Tanpa Tipe";
+            String tipeStudio = (studio.getTipe() != null && studio.getTipe().getNama() != null)
+                    ? studio.getTipe().getNama()
+                    : "Tanpa Tipe";
             dto.namaStudio = studio.getNama() + " (" + tipeStudio + ")";
             dto.tiketTerjual = terjual;
             dto.totalKapasitasHariIni = kapasitasTotal;
@@ -853,6 +866,16 @@ public class AdminPageController {
 
     @PostMapping("/hapus-jadwal")
     public String hapusJadwal(@RequestParam Long id) {
+        if (tiketRepository.existsByJadwalId(id)) {
+            Jadwal j = jadwalRepository.findById(id).orElse(null);
+            String redirectDate = j != null && j.getWaktuMulai() != null ? j.getWaktuMulai().toLocalDate().toString()
+                    : null;
+            if (redirectDate != null) {
+                return "redirect:/admin/manajemen-jadwal?date=" + redirectDate + "&error=in_use";
+            }
+            return "redirect:/admin/manajemen-jadwal?error=in_use";
+        }
+
         final String[] redirectDate = { null };
         jadwalRepository.findById(id).ifPresent(j -> {
             String deskripsi = "Film " + j.getFilm().getJudul() + " di " + j.getStudio().getNama() + " jam "
