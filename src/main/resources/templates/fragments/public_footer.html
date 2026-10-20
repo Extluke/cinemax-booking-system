@@ -1,8 +1,6 @@
 <!--
-  Tujuan program: Menampilkan footer halaman publik memakai profil bioskop dari database.
-
-
-  Terakhir diubah: 27 September 2026, 00:00 WIB
+  Tujuan program: Menampilkan footer halaman publik memakai profil bioskop dan tautan Google Maps dinamis dari database.
+  Terakhir diubah: 17 Oktober 2026, 13:00 WIB
 -->
 <footer th:fragment="publicFooter" class="public-footer">
   <p>
@@ -10,7 +8,8 @@
   </p>
 
   <address class="public-footer__address" th:if="${!#strings.isEmpty(appConfig.alamatBioskop)}">
-    <span th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</span>
+    <a th:if="${!#strings.isEmpty(appConfig.gmapsEmbedUrl)}" th:href="${appConfig.gmapsEmbedUrl}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;" th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</a>
+    <span th:if="${#strings.isEmpty(appConfig.gmapsEmbedUrl)}" th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</span>
   </address>
 
   <p th:if="${!#strings.isEmpty(appConfig.kontakCs)}">

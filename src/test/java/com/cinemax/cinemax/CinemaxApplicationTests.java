@@ -32,7 +32,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 
+import org.springframework.http.MediaType;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -172,5 +175,18 @@ class CinemaxApplicationTests {
         mockMvc.perform(get(jadwalFilmUrl))
                 .andExpect(status().isOk())
                 .andExpect(content().string(org.hamcrest.Matchers.containsString(NAMA_TIPE_STUDIO)));
+    }
+
+    /**
+     * Memastikan webhook callback Midtrans (/api/payment/notification) dapat diakses
+     * dari luar tanpa autentikasi session dan tanpa token CSRF.
+     * Mengembalikan 400 Bad Request karena payload kosong (bukan 401 Unauthorized atau 403 Forbidden).
+     */
+    @Test
+    void midtransWebhookDapatDiaksesTanpaAutentikasiDanCsrf() throws Exception {
+        mockMvc.perform(post("/api/payment/notification")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isBadRequest());
     }
 }

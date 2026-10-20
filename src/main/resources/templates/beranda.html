@@ -1,8 +1,6 @@
 <!--
-  Tujuan program: Menampilkan beranda CineMax dengan banner CMS, film, dan footer dari database.
-
-
-  Terakhir diubah: 27 September 2026, 00:00 WIB
+  Tujuan program: Menampilkan beranda CineMax dengan banner CMS, film, informasi bioskop dinamis, dan peta lokasi Google Maps.
+  Terakhir diubah: 17 Oktober 2026, 13:00 WIB
 -->
 <!doctype html>
 <html lang="id" xmlns:sec="http://www.thymeleaf.org/extras/spring-security" xmlns:th="http://www.thymeleaf.org">
@@ -107,6 +105,11 @@
         <span class="badge badge-warning">LOKASI</span>
         <h3 th:text="${appConfig.namaBioskop}">Cinemax Multiplex</h3>
         <p class="muted" th:text="${appConfig.alamatBioskop}">Alamat bioskop dari database.</p>
+        <div style="margin-top: 10px;" th:if="${!#strings.isEmpty(appConfig.gmapsEmbedUrl)}">
+          <a class="btn btn-ghost btn-sm" th:href="${appConfig.gmapsEmbedUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 12px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+            <span>Lihat di Maps ↗</span>
+          </a>
+        </div>
       </div>
       <div class="card">
         <span class="badge badge-info">LAYANAN</span>
@@ -117,6 +120,35 @@
         <span class="badge badge-success">TIKET DIGITAL</span>
         <h3>Pesan dengan praktis</h3>
         <p class="muted">Pilih film dan jadwal sesuai data yang tersedia di CineMax.</p>
+      </div>
+    </section>
+
+    <!-- Section Peta Lokasi Bioskop Dinamis (Google Maps Embed) -->
+    <section class="home-section cinema-map-section" th:if="${!#strings.isEmpty(appConfig.formattedGmapsEmbedUrl)}">
+      <div class="page-head section-heading">
+        <div>
+          <h2>Peta & Lokasi Bioskop</h2>
+          <p class="muted">
+            <span th:text="${appConfig.namaBioskop}">Bioskop Arby</span> · 
+            <span th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</span>
+          </p>
+        </div>
+        <a class="btn btn-secondary btn-sm" th:if="${!#strings.isEmpty(appConfig.gmapsEmbedUrl)}" th:href="${appConfig.gmapsEmbedUrl}" target="_blank" rel="noopener noreferrer">
+          Buka di Google Maps ↗
+        </a>
+      </div>
+
+      <div class="cinema-map-wrapper">
+        <iframe
+          th:src="${appConfig.formattedGmapsEmbedUrl}"
+          title="Peta Lokasi Bioskop"
+          width="100%"
+          height="380"
+          style="border: 0;"
+          allowfullscreen=""
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade">
+        </iframe>
       </div>
     </section>
   </main>

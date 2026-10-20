@@ -1,6 +1,10 @@
+/**
+ * Tujuan program: Entitas konfigurasi operasional, profil bioskop, integrasi Google Maps, dan payment gateway.
+ * Terakhir diubah: 17 Oktober 2026, 13:00 WIB
+ */
 package com.cinemax.cinemax.domain.config;
 
-
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 
@@ -43,6 +47,7 @@ public class BioskopConfig {
     private String namaBioskop = "Cinemax Multiplex";
     private String alamatBioskop = "Jl. Sudirman No. 123, Jakarta";
     private String kontakCs = "08123456789";
+    @Column(columnDefinition = "TEXT")
     private String gmapsEmbedUrl = "";
 
     // Midtrans
@@ -126,6 +131,79 @@ public class BioskopConfig {
     
     public String getGmapsEmbedUrl() { return gmapsEmbedUrl; }
     public void setGmapsEmbedUrl(String gmapsEmbedUrl) { this.gmapsEmbedUrl = gmapsEmbedUrl; }
+
+    /**
+     * Menghasilkan URL sematan (embed) Google Maps yang valid untuk elemen iframe.
+     * Mengonversi berbagai format input (tag iframe, tautan pendek share, koordinat, atau alamat)
+     * menjadi URL embed yang aman dan dijamin dapat dimuat tanpa terhalang X-Frame-Options.
+     *
+     * Pra-kondisi: Field gmapsEmbedUrl dan alamatBioskop dapat berupa null, string kosong, atau URL Google Maps.
+     * Pasca-kondisi: Mengembalikan URL sematan Google Maps yang valid untuk atribut src iframe,
+     *               atau string kosong jika tidak ada data lokasi yang tersedia.
+     *
+     * @return URL sematan Google Maps untuk iframe.
+     */
+    public String getFormattedGmapsEmbedUrl() {
+        if (gmapsEmbedUrl != null && !gmapsEmbedUrl.trim().isEmpty()) {
+            String trimmedUrl = gmapsEmbedUrl.trim();
+
+            // Ekstraksi nilai atribut src jika admin memasukkan seluruh tag <iframe>
+            if (trimmedUrl.startsWith("<iframe") || trimmedUrl.contains("<iframe")) {
+                java.util.regex.Matcher iframeMatcher = java.util.regex.Pattern.compile("src=[\"']([^\"']+)[\"']").matcher(trimmedUrl);
+                if (iframeMatcher.find()) {
+                    trimmedUrl = iframeMatcher.group(1);
+                }
+            }
+
+            // Jika URL sudah berupa format sematan resmi Google Maps
+            if (trimmedUrl.contains("/maps/embed") || trimmedUrl.contains("output=embed")) {
+                return trimmedUrl;
+            }
+
+            // Jika URL langsung menyertakan koordinat latitude dan longitude
+            java.util.regex.Matcher coordinateMatcher = java.util.regex.Pattern.compile("[-+]?\\d+\\.\\d+,\\s*[-+]?\\d+\\.\\d+").matcher(trimmedUrl);
+            if (coordinateMatcher.find()) {
+                String coordinates = coordinateMatcher.group().replaceAll("\\s+", "");
+                return "https://maps.google.com/maps?q=" + coordinates + "&z=17&output=embed";
+            }
+
+            // Jika URL berupa tautan pendek Google Maps (maps.app.goo.gl atau goo.gl/maps)
+            if (trimmedUrl.contains("maps.app.goo.gl") || trimmedUrl.contains("goo.gl/maps")) {
+                try {
+                    java.net.HttpURLConnection connection = (java.net.HttpURLConnection) new java.net.URL(trimmedUrl).openConnection();
+                    connection.setInstanceFollowRedirects(false);
+                    connection.setConnectTimeout(2500);
+                    connection.setReadTimeout(2500);
+                    connection.setRequestProperty("User-Agent", "Mozilla/5.0");
+
+                    String redirectLocation = connection.getHeaderField("Location");
+                    connection.disconnect();
+
+                    if (redirectLocation != null && !redirectLocation.isEmpty()) {
+                        java.util.regex.Matcher redirectCoordMatcher = java.util.regex.Pattern.compile("[-+]?\\d+\\.\\d+,\\s*[-+]?\\d+\\.\\d+").matcher(redirectLocation);
+                        if (redirectCoordMatcher.find()) {
+                            String coordinates = redirectCoordMatcher.group().replaceAll("\\s+", "");
+                            return "https://maps.google.com/maps?q=" + coordinates + "&z=17&output=embed";
+                        }
+                    }
+                } catch (java.io.IOException ioException) {
+                    // Penanganan gangguan koneksi: alihkan ke fallback alamat jika resolusi gagal
+                }
+            }
+        }
+
+        // Fallback otomatis menggunakan alamat bioskop jika URL tidak tersedia atau belum terkonversi
+        if (alamatBioskop != null && !alamatBioskop.trim().isEmpty()) {
+            try {
+                String encodedAddress = java.net.URLEncoder.encode(alamatBioskop.trim(), java.nio.charset.StandardCharsets.UTF_8);
+                return "https://maps.google.com/maps?q=" + encodedAddress + "&output=embed";
+            } catch (Exception generalException) {
+                return "";
+            }
+        }
+
+        return "";
+    }
 
     public boolean isProduction() { return isProduction; }
     public void setProduction(boolean production) { isProduction = production; }

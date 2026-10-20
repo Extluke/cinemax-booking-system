@@ -1,0 +1,32 @@
+**30 ATURAN WAJIB**:
+
+1. **Berikan komentar pada sintaks yang rumit**: Sertakan komentar yang cukup pada kode untuk menjelaskan bagian-bagian sintaks yang sulit dipahami.
+2. **Sertakan baris header dokumen pada setiap program**: Awali program dengan komentar yang menyatakan **tujuan program, serta tanggal dan waktu** terakhir diubah.
+3. **Gunakan baris kosong dan spasi untuk keterbacaan**: Manfaatkan baris kosong (*blank lines*) dan spasi secara konsisten untuk meningkatkan kerapian dan keterbacaan kode.
+4. **Deklarasikan variabel secara terpisah per baris**: Deklarasikan setiap variabel pada baris tersendiri agar dapat disertai komentar penjelas di sampingnya.
+5. **Gunakan nama variabel yang bermakna (*self-documenting*)**: Pilih nama variabel yang jelas dan mendeskripsikan fungsinya agar kode mudah dipahami tanpa perlu membaca manual.
+6. **Tempatkan variabel atribut (*fields*) di bagian atas kelas**: Deklarasikan atribut kelas di bagian awal sebelum deklarasi method agar mudah dibaca sebelum variabel digunakan.
+7. **Beri spasi di sekitar operator biner**: Tempatkan spasi di kedua sisi operator biner (contoh: `a = b + c;`).
+8. **Jangan berikan spasi pada operator uner**: Tempatkan operator *increment* dan *decrement* uner tepat di samping operand-nya tanpa spasi (contoh: `i++`).
+9. **Satu pernyataan (*statement*) per baris**: Tuliskan hanya satu pernyataan pada setiap baris kode untuk meningkatkan keterbacaan.
+10. **Gunakan tanda kurung pada ekspresi kompleks**: Gunakan tanda kurung untuk menegaskan urutan evaluasi dalam ekspresi yang melibatkan banyak operator.
+11. **Beri spasi setelah tanda koma pada argumen**: Sertakan spasi setelah setiap tanda koma pada daftar argumen pemanggilan method atau fungsi.
+12. **Indentasikan blok pernyataan kondisional**: Lakukan indentasi pada isi blok pernyataan `if...else`.
+13. **Batasi header pernyataan kontrol**: Usahakan agar *header* dari pernyataan kontrol (seperti `for` atau `while`) terbatas dalam satu baris.
+14. **Gunakan kurung kurawal pada `do...while`**: Selalu sertakan kurung kurawal `{}` dalam pernyataan `do...while` untuk menghindari ambiguitas.
+15. **Letakkan klausa `default` di akhir `switch`**: Tempatkan kasus `default` pada posisi paling akhir dalam blok `switch`.
+16. **Hindari kata kunci redundan pada Interface**: Deklarasikan method interface tanpa kata kunci `public` dan `abstract`, serta konstanta tanpa `public static final` karena sudah bersifat implisit.
+17. **Pilih nama method interface yang bersifat umum**: Gunakan nama method pada interface yang menggambarkan tujuannya secara umum.
+18. **Gunakan nama parameter eksepsi yang mencerminkan tipenya**: Penamaan parameter eksepsi yang sesuai dengan tipe eksepsi membantu memperjelas kode.
+19. **Hindari membungkus setiap statement dengan try-catch**: Hindari penggunaan `try...catch...finally` pada setiap baris; bungkuslah satu blok kode yang signifikan untuk meningkatkan keterbacaan.
+20. **Buat kelas eksepsi yang spesifik**: Asosiasikan setiap jenis gangguan eksekusi yang serius dengan kelas `Exception` yang dinamai secara tepat.
+21. **Gunakan standar komentar Javadoc**: Gunakan komentar Javadoc (`/** ... */`) sebagai standar utama pendokumentasian kode.
+22. **Terapkan prinsip "All Input is Evil" (*Defensive Programming*)**: Jangan pernah mempercayai input dari luar dan selalu lakukan validasi terhadap seluruh data yang masuk.
+23. **Validasi semua saluran input**: Lakukan validasi input pada semua pintu masuk aplikasi (*command line*, *environment variables*, parameter URL/POST, file, dll.).
+24. **Minimalkan area serangan (*Attack Surface*)**: Kurangi risiko keamanan dengan menonaktifkan kanal, port, atau API yang tidak digunakan.
+25. **Gunakan fungsi/pustaka yang aman dari masalah memori**: Gunakan fungsi pustaka yang melakukan pemeriksaan batas (*bounds-checking*) dan hindari fungsi tidak aman seperti `gets`, `strcpy`, atau `sprintf`.
+26. **Hindari penggabungan string langsung untuk kueri (SQL Injection)**: Hindari menggabungkan string secara langsung dengan input pengguna saat membangun kueri untuk mencegah serangan injeksi.
+27. **Lakukan peninjauan kode (*Code Review & Inspection*)**: Terapkan peninjauan kode secara manual atau inspeksi formal (seperti *Fagan inspection*) menggunakan daftar periksa kesalahan (*checklist*).
+28. **Tetapkan pra-kondisi (*Preconditions*) dan pasca-kondisi (*Postconditions*)**: Definisikan pra-kondisi yang harus dipenuhi sebelum proses berjalan dan pasca-kondisi yang dijamin setelah proses selesai.
+29. **Minimalkan keterikatan antar objek (*Coupling Between Objects - CBO*)**: Usahakan keterikatan (*coupling*) antar objek sekecil mungkin untuk meningkatkan modularitas dan kemudahan penggunaan kembali.
+30. **Tingkatkan kohesi di dalam kelas**: Pastikan method-method di dalam satu kelas saling berkaitan erat dan memiliki tingkat kohesi yang tinggi (*high cohesion*).
