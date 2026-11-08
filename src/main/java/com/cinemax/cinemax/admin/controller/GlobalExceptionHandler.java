@@ -3,14 +3,21 @@ package com.cinemax.cinemax.admin.controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import java.io.PrintWriter;
-import java.io.StringWriter;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
+    }
 
     @ExceptionHandler(Exception.class)
     public ModelAndView handleException(HttpServletRequest request, Exception ex) {

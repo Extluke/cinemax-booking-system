@@ -1,14 +1,19 @@
+/**
+ * Tujuan program: Mengelola peninjauan, penolakan, persetujuan, dan penyelesaian refund.
+ * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
+ */
 package com.cinemax.cinemax.admin.controller;
 
 import com.cinemax.cinemax.domain.booking.Refund;
 import com.cinemax.cinemax.domain.booking.RefundRepository;
 import com.cinemax.cinemax.domain.booking.Transaksi;
 import com.cinemax.cinemax.domain.booking.TransaksiRepository;
+import com.cinemax.cinemax.domain.booking.Tiket;
+import com.cinemax.cinemax.domain.booking.TiketRepository;
 import com.cinemax.cinemax.domain.config.AuditLog;
 import com.cinemax.cinemax.domain.config.AuditService;
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -22,14 +27,25 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class AdminRefundController {
 
-    @Autowired
-    private RefundRepository refundRepository;
+    private final RefundRepository refundRepository;
 
-    @Autowired
-    private TransaksiRepository transaksiRepository;
+    private final TransaksiRepository transaksiRepository;
 
-    @Autowired
-    private AuditService auditService;
+    private final TiketRepository tiketRepository;
+
+    private final AuditService auditService;
+
+    /** Membuat controller dengan dependency wajib melalui constructor injection. */
+    public AdminRefundController(
+            RefundRepository refundRepository,
+            TransaksiRepository transaksiRepository,
+            TiketRepository tiketRepository,
+            AuditService auditService) {
+        this.refundRepository = refundRepository;
+        this.transaksiRepository = transaksiRepository;
+        this.tiketRepository = tiketRepository;
+        this.auditService = auditService;
+    }
 
     @GetMapping("/refunds")
     public String viewRefunds(
@@ -64,6 +80,11 @@ public class AdminRefundController {
         return "admin/manajemen_refund";
     }
 
+    /**
+     * Menerima refund dan melepaskan kursi tiket agar tersedia untuk pemesanan lain.
+     * Pra-kondisi: pengajuan masih menunggu persetujuan.
+     * Pasca-kondisi: status refund diterima dan seluruh tiket transaksi dilepas.
+     */
     @PostMapping("/refund/approve/{id}")
     public String approveRefund(@PathVariable Long id) {
         Refund refund = refundRepository.findById(id).orElse(null);
@@ -75,8 +96,11 @@ public class AdminRefundController {
             refund.setWaktuPersetujuan(LocalDateTime.now());
             
             Transaksi transaksi = refund.getTransaksi();
-            transaksi.setRefundStatus(Transaksi.RefundStatus.REFUNDED);
-            transaksi.setStatus(Transaksi.StatusTransaksi.REFUND);
+            transaksi.setRefundStatus(Transaksi.RefundStatus.APPROVED_REFUND);
+            // Kursi dilepas hanya setelah admin menerima pengajuan refund.
+            for (Tiket tiket : tiketRepository.findByTransaksiId(transaksi.getId())) {
+                tiket.setStatus(Tiket.StatusTiket.REFUNDED);
+            }
             transaksiRepository.save(transaksi);
             
             refundRepository.save(refund);
@@ -89,7 +113,8 @@ public class AdminRefundController {
     @PostMapping("/refund/reject/{id}")
     public String rejectRefund(@PathVariable Long id, @RequestParam String alasanTolak) {
         Refund refund = refundRepository.findById(id).orElse(null);
-        if (refund != null && refund.getStatus() == Refund.StatusRefund.PENDING) {
+        if (refund != null && refund.getStatus() == Refund.StatusRefund.PENDING
+                && alasanTolak != null && !alasanTolak.isBlank() && alasanTolak.length() <= 2000) {
             String adminName = SecurityContextHolder.getContext().getAuthentication().getName();
             
             refund.setStatus(Refund.StatusRefund.REJECTED);
@@ -99,6 +124,7 @@ public class AdminRefundController {
             
             Transaksi transaksi = refund.getTransaksi();
             transaksi.setRefundStatus(Transaksi.RefundStatus.REJECTED);
+            transaksi.setStatus(Transaksi.StatusTransaksi.SUCCESS);
             transaksiRepository.save(transaksi);
             
             refundRepository.save(refund);
@@ -106,5 +132,30 @@ public class AdminRefundController {
             auditService.log(AuditLog.ActionType.UPDATE, "Refund: " + transaksi.getNomorPesanan(), "Menolak pengajuan refund: " + alasanTolak);
         }
         return "redirect:/admin/refunds?rejected=true";
+    }
+
+    /**
+     * Menandai dana sudah dikembalikan setelah tahap persetujuan selesai.
+     * Pra-kondisi: refund telah disetujui admin.
+     * Pasca-kondisi: status refund dan transaksi tercatat selesai dikembalikan.
+     */
+    @PostMapping("/refund/process/{id}")
+    public String processRefund(@PathVariable Long id) {
+        Refund refund = refundRepository.findById(id).orElse(null);
+        if (refund != null && refund.getStatus() == Refund.StatusRefund.APPROVED) {
+            String adminName = SecurityContextHolder.getContext().getAuthentication().getName();
+            refund.setStatus(Refund.StatusRefund.PROCESSED);
+            refund.setDisetujuiOleh(adminName);
+            refund.setWaktuPersetujuan(LocalDateTime.now());
+
+            Transaksi transaksi = refund.getTransaksi();
+            transaksi.setRefundStatus(Transaksi.RefundStatus.REFUNDED);
+            transaksi.setStatus(Transaksi.StatusTransaksi.REFUND);
+            transaksiRepository.save(transaksi);
+            refundRepository.save(refund);
+            auditService.log(AuditLog.ActionType.UPDATE, "Refund: " + transaksi.getNomorPesanan(),
+                    "Pengembalian dana ditandai selesai");
+        }
+        return "redirect:/admin/refunds?processed=true";
     }
 }

@@ -1,3 +1,7 @@
+/**
+ * Tujuan program: Menangani checkout dan notifikasi pembayaran dari gateway.
+ * Terakhir diubah: 2 Oktober 2026, 22:36 WIB.
+ */
 package com.cinemax.cinemax.api.controller;
 
 import com.cinemax.cinemax.api.dto.CheckoutRequestDTO;
@@ -7,7 +11,7 @@ import com.cinemax.cinemax.domain.booking.Transaksi;
 import com.cinemax.cinemax.domain.booking.TransaksiRepository;
 import com.cinemax.cinemax.domain.schedule.Jadwal;
 import com.cinemax.cinemax.domain.schedule.JadwalRepository;
-import com.cinemax.cinemax.domain.schedule.Kursi;
+
 import com.cinemax.cinemax.domain.user.User;
 import com.cinemax.cinemax.domain.user.UserRepository;
 import com.cinemax.cinemax.infrastructure.payment.PaymentGateway;
@@ -15,13 +19,17 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.security.MessageDigest;
+import java.nio.charset.StandardCharsets;
+import java.math.BigDecimal;
+import com.cinemax.cinemax.domain.config.BioskopConfig;
+import com.cinemax.cinemax.domain.config.BioskopConfigRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/payment")
-@CrossOrigin(origins = "*")
 public class ApiPaymentController {
 
     @Autowired
@@ -38,6 +46,9 @@ public class ApiPaymentController {
 
     @Autowired
     private PaymentGateway paymentGateway;
+
+    @Autowired
+    private BioskopConfigRepository configRepository;
 
     @PostMapping("/checkout")
     public ResponseEntity<?> checkout(@RequestBody CheckoutRequestDTO request) {
@@ -105,6 +116,73 @@ public class ApiPaymentController {
             Map<String, String> error = new HashMap<>();
             error.put("error", e.getMessage());
             return ResponseEntity.badRequest().body(error);
+        }
+    }
+
+    @PostMapping("/notification")
+    public ResponseEntity<?> notification(@RequestBody Map<String, Object> payload) {
+        try {
+            String orderIdStr = (String) payload.get("order_id");
+            String statusCode = (String) payload.get("status_code");
+            String grossAmount = (String) payload.get("gross_amount");
+            String signatureKey = (String) payload.get("signature_key");
+            String transactionStatus = (String) payload.get("transaction_status");
+
+            if (orderIdStr == null || transactionStatus == null || !orderIdStr.matches("[0-9]{1,19}")
+                    || statusCode == null || !statusCode.matches("[0-9]{1,4}")
+                    || grossAmount == null || !grossAmount.matches("[0-9]+(?:\\.[0-9]{1,2})?")
+                    || signatureKey == null || !signatureKey.matches("[0-9a-fA-F]{128}")) {
+                return ResponseEntity.badRequest().body("Invalid payload");
+            }
+
+            BioskopConfig config = configRepository.findById("SINGLETON").orElse(null);
+            if (config == null || config.getPaymentServerKey() == null || config.getPaymentServerKey().isBlank()) {
+                return ResponseEntity.status(503).body("Payment webhook is not configured");
+            }
+
+            // Hanya webhook bertanda tangan valid boleh mengubah transaksi menjadi lunas.
+            String rawString = orderIdStr + statusCode + grossAmount + config.getPaymentServerKey();
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            byte[] encodedHash = digest.digest(rawString.getBytes(StandardCharsets.UTF_8));
+            StringBuilder calculatedSignatureBuilder = new StringBuilder(2 * encodedHash.length);
+            for (byte hashByte : encodedHash) {
+                String hexByte = Integer.toHexString(0xff & hashByte);
+                if (hexByte.length() == 1) {
+                    calculatedSignatureBuilder.append('0');
+                }
+                calculatedSignatureBuilder.append(hexByte);
+            }
+            String calculatedSignature = calculatedSignatureBuilder.toString();
+            boolean signatureValid = MessageDigest.isEqual(calculatedSignature.getBytes(StandardCharsets.US_ASCII),
+                    signatureKey.toLowerCase(java.util.Locale.ROOT).getBytes(StandardCharsets.US_ASCII));
+            if (!signatureValid) {
+                return ResponseEntity.status(403).body("Invalid signature key");
+            }
+
+            Long transaksiId = Long.parseLong(orderIdStr);
+            Transaksi transaksi = transaksiRepository.findById(transaksiId)
+                    .orElseThrow(() -> new Exception("Transaksi tidak ditemukan"));
+
+            BigDecimal amountFromGateway = new BigDecimal(grossAmount);
+            BigDecimal expectedAmount = BigDecimal.valueOf(transaksi.getTotalHarga());
+            if (amountFromGateway.compareTo(expectedAmount) != 0) {
+                return ResponseEntity.badRequest().body("Payment amount does not match order");
+            }
+
+            String fraudStatus = (String) payload.get("fraud_status");
+            boolean settlementBerhasil = "settlement".equals(transactionStatus);
+            boolean captureBerhasil = "capture".equals(transactionStatus) && "accept".equalsIgnoreCase(fraudStatus);
+            if ((settlementBerhasil || captureBerhasil)
+                    && transaksi.getStatus() == Transaksi.StatusTransaksi.PENDING
+                    && transaksi.getRefundStatus() == Transaksi.RefundStatus.NONE) {
+                transaksi.setStatus(Transaksi.StatusTransaksi.SUCCESS);
+                transaksiRepository.save(transaksi);
+            }
+
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            System.err.println("Webhook error: " + e.getMessage());
+            return ResponseEntity.status(500).build();
         }
     }
 }

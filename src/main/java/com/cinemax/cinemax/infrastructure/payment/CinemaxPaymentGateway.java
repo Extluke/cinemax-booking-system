@@ -31,8 +31,10 @@ public class CinemaxPaymentGateway implements PaymentGateway {
 
         String serverKey = config.getPaymentServerKey();
         
-        // Pilih URL Sandbox atau Production (Disini kita default ke Sandbox)
-        String apiUrl = "https://app.sandbox.midtrans.com/snap/v1/transactions";
+        // Pilih URL Sandbox atau Production
+        String apiUrl = config.isProduction() 
+                ? "https://app.midtrans.com/snap/v1/transactions"
+                : "https://app.sandbox.midtrans.com/snap/v1/transactions";
 
         // Setup Headers Auth Basic
         HttpHeaders headers = new HttpHeaders();
@@ -60,12 +62,17 @@ public class CinemaxPaymentGateway implements PaymentGateway {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         // Hit API Midtrans
-        ResponseEntity<Map> response = restTemplate.exchange(apiUrl, HttpMethod.POST, entity, Map.class);
+        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+            apiUrl, 
+            HttpMethod.POST, 
+            entity, 
+            new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+        );
         
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            String redirectUrl = (String) response.getBody().get("redirect_url");
-            if (redirectUrl != null) {
-                return redirectUrl;
+            String token = (String) response.getBody().get("token");
+            if (token != null) {
+                return token;
             }
         }
         

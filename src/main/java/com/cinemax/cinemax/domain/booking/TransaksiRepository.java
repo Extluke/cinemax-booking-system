@@ -12,6 +12,9 @@ public interface TransaksiRepository extends JpaRepository<Transaksi, Long> {
     // Mengambil 5 transaksi terbaru
     List<Transaksi> findTop5ByOrderByTanggalTransaksiDesc();
 
+    // Mengambil semua transaksi dari pengguna tertentu
+    List<Transaksi> findByPelangganOrderByTanggalTransaksiDesc(com.cinemax.cinemax.domain.user.User pelanggan);
+
     // Menghitung total pendapatan (hanya status SUCCESS)
     @Query("SELECT SUM(t.totalHarga) FROM Transaksi t WHERE t.status = 'SUCCESS'")
     Double calculateTotalRevenue();

@@ -7,9 +7,7 @@ import com.cinemax.cinemax.domain.schedule.JadwalRepository;
 import com.cinemax.cinemax.domain.schedule.StudioRepository;
 import com.cinemax.cinemax.domain.user.User;
 import com.cinemax.cinemax.domain.user.UserRepository;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.UUID;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -43,7 +41,7 @@ public class DataSeeder {
                 userRepository.save(superAdmin);
             }
 
-            User kasir = userRepository.findByEmail("admin@cineplex.com").orElseGet(() -> {
+            userRepository.findByEmail("admin@cineplex.com").orElseGet(() -> {
                 User u = new User();
                 u.setNamaLengkap("Administrator");
                 u.setEmail("admin@cineplex.com");

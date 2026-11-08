@@ -1,0 +1,23 @@
+<!--
+  Tujuan program: Menampilkan footer halaman publik memakai profil bioskop dan tautan Google Maps dinamis dari database.
+  Terakhir diubah: 17 Oktober 2026, 13:00 WIB
+-->
+<footer th:fragment="publicFooter" class="public-footer">
+  <p>
+    <strong th:text="${appConfig.namaBioskop}">Cinemax Multiplex</strong>
+  </p>
+
+  <address class="public-footer__address" th:if="${!#strings.isEmpty(appConfig.alamatBioskop)}">
+    <a th:if="${!#strings.isEmpty(appConfig.gmapsEmbedUrl)}" th:href="${appConfig.gmapsEmbedUrl}" target="_blank" rel="noopener noreferrer" style="color: inherit; text-decoration: underline;" th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</a>
+    <span th:if="${#strings.isEmpty(appConfig.gmapsEmbedUrl)}" th:text="${appConfig.alamatBioskop}">Jl. Sudirman No. 123, Jakarta</span>
+  </address>
+
+  <p th:if="${!#strings.isEmpty(appConfig.kontakCs)}">
+    Layanan pelanggan:
+    <a th:href="${'tel:' + appConfig.kontakCs}" th:text="${appConfig.kontakCs}">08123456789</a>
+  </p>
+
+  <p>
+    © 2026 <span th:text="${appConfig.namaBioskop}">Cinemax Multiplex</span>. Seluruh hak cipta dilindungi.
+  </p>
+</footer>
