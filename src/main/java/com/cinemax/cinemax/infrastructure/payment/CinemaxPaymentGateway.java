@@ -62,20 +62,26 @@ public class CinemaxPaymentGateway implements PaymentGateway {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
 
         // Hit API Midtrans
-        ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-            apiUrl, 
-            HttpMethod.POST, 
-            entity, 
-            new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
-        );
-        
-        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            String token = (String) response.getBody().get("token");
-            if (token != null) {
-                return token;
+        try {
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                apiUrl, 
+                HttpMethod.POST, 
+                entity, 
+                new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {}
+            );
+            
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                String token = (String) response.getBody().get("token");
+                if (token != null) {
+                    return token;
+                }
             }
+            
+            throw new Exception("Gagal mendapatkan link pembayaran dari Midtrans: " + response.getBody());
+        } catch (org.springframework.web.client.HttpClientErrorException.Unauthorized e) {
+            throw new Exception("Server Key Midtrans tidak valid atau tidak terotorisasi (401 Unauthorized). Silakan periksa atau masukkan Server Key Midtrans Sandbox yang valid di menu Admin > Pengaturan.");
+        } catch (org.springframework.web.client.HttpStatusCodeException e) {
+            throw new Exception("Gagal menghubungi Midtrans (" + e.getStatusCode() + "): " + e.getResponseBodyAsString());
         }
-        
-        throw new Exception("Gagal mendapatkan link pembayaran dari Midtrans: " + response.getBody());
     }
 }

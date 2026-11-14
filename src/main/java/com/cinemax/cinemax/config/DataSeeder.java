@@ -33,21 +33,29 @@ public class DataSeeder {
                 u.setEmail("superadmin@cineplex.com");
                 u.setPassword(passwordEncoder.encode("superadmin123"));
                 u.setRole("ROLE_SUPER_ADMIN");
+                u.setEnabled(true);
+                u.setAuthProvider(User.AuthProvider.LOCAL);
                 return userRepository.save(u);
             });
-            // Update role if already exists but not super admin
+            superAdmin.setEnabled(true);
+            superAdmin.setAuthProvider(User.AuthProvider.LOCAL);
             if (!"ROLE_SUPER_ADMIN".equals(superAdmin.getRole())) {
                 superAdmin.setRole("ROLE_SUPER_ADMIN");
-                userRepository.save(superAdmin);
             }
+            userRepository.save(superAdmin);
 
-            userRepository.findByEmail("admin@cineplex.com").orElseGet(() -> {
+            User admin = userRepository.findByEmail("admin@cineplex.com").orElseGet(() -> {
                 User u = new User();
                 u.setNamaLengkap("Administrator");
                 u.setEmail("admin@cineplex.com");
                 u.setPassword(passwordEncoder.encode("admin123"));
                 u.setRole("ROLE_ADMIN");
+                u.setEnabled(true);
+                u.setAuthProvider(User.AuthProvider.LOCAL);
                 return userRepository.save(u);
-            });        };
+            });
+            admin.setEnabled(true);
+            admin.setAuthProvider(User.AuthProvider.LOCAL);
+            userRepository.save(admin);        };
     }
 }

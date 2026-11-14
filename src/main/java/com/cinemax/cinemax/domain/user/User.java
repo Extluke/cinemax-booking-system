@@ -16,11 +16,29 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(nullable = false)
+    @Column(nullable = true)
     private String password;
 
     @Column(nullable = false)
     private String role; // e.g., "ROLE_USER" or "ROLE_ADMIN"
+
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean enabled = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "varchar(20) default 'LOCAL'")
+    private AuthProvider authProvider = AuthProvider.LOCAL;
+
+    @Column(nullable = true)
+    private String googleId;
+
+    @Column(nullable = true)
+    private String profilePicture;
+
+    public enum AuthProvider {
+        LOCAL,
+        GOOGLE
+    }
 
     public User() {
     }
@@ -31,6 +49,8 @@ public class User {
         this.email = email;
         this.password = password;
         this.role = role;
+        this.enabled = true;
+        this.authProvider = AuthProvider.LOCAL;
     }
 
     public Long getId() {
@@ -71,6 +91,38 @@ public class User {
 
     public void setRole(String role) {
         this.role = role;
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public AuthProvider getAuthProvider() {
+        return authProvider;
+    }
+
+    public void setAuthProvider(AuthProvider authProvider) {
+        this.authProvider = authProvider;
+    }
+
+    public String getGoogleId() {
+        return googleId;
+    }
+
+    public void setGoogleId(String googleId) {
+        this.googleId = googleId;
+    }
+
+    public String getProfilePicture() {
+        return profilePicture;
+    }
+
+    public void setProfilePicture(String profilePicture) {
+        this.profilePicture = profilePicture;
     }
 }
 

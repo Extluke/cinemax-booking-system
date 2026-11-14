@@ -38,6 +38,21 @@ public class Transaksi {
     @Column(nullable = false, columnDefinition = "varchar(255) default 'NONE'")
     private RefundStatus refundStatus = RefundStatus.NONE;
 
+    @Column(nullable = true)
+    private String otpHash;
+
+    @Column(nullable = true)
+    private LocalDateTime otpExpiry;
+
+    @Column(nullable = false, columnDefinition = "int default 0")
+    private int otpAttempts = 0;
+
+    @Column(nullable = true)
+    private LocalDateTime otpLastSentAt;
+
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean otpVerified = false;
+
     public enum RefundStatus {
         NONE,
         PENDING_REFUND,
@@ -60,4 +75,20 @@ public class Transaksi {
     public void setStatus(StatusTransaksi status) { this.status = status; }
     public RefundStatus getRefundStatus() { return refundStatus; }
     public void setRefundStatus(RefundStatus refundStatus) { this.refundStatus = refundStatus; }
+
+    public String getOtpHash() { return otpHash; }
+    public void setOtpHash(String otpHash) { this.otpHash = otpHash; }
+
+    public LocalDateTime getOtpExpiry() { return otpExpiry; }
+    public void setOtpExpiry(LocalDateTime otpExpiry) { this.otpExpiry = otpExpiry; }
+
+    public int getOtpAttempts() { return otpAttempts; }
+    public void setOtpAttempts(int otpAttempts) { this.otpAttempts = otpAttempts; }
+
+    public LocalDateTime getOtpLastSentAt() { return otpLastSentAt; }
+    public void setOtpLastSentAt(LocalDateTime otpLastSentAt) { this.otpLastSentAt = otpLastSentAt; }
+
+    public boolean isOtpVerified() { return otpVerified; }
+    public boolean getOtpVerified() { return otpVerified; }
+    public void setOtpVerified(boolean otpVerified) { this.otpVerified = otpVerified; }
 }

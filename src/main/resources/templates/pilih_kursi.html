@@ -125,7 +125,8 @@
             checkoutBtn.textContent = 'Lanjut Checkout →';
             checkoutBtn.style.pointerEvents = 'auto';
           } else {
-            window.location.href = '/faktur?transaksiId=' + data.transaksiId + '&token=' + data.paymentUrl;
+            const redirectUrl = '/faktur?transaksiId=' + data.transaksiId + (data.paymentUrl ? '&token=' + encodeURIComponent(data.paymentUrl) : '');
+            window.location.href = redirectUrl;
           }
         })
         .catch(err => {

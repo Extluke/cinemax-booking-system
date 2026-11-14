@@ -1,8 +1,10 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="_csrf" th:content="${_csrf.token}"/>
+  <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
   <title>Faktur Pesanan — Cineplex</title>
   <link rel="stylesheet" href="/css/style.css">
 </head>
@@ -21,6 +23,53 @@
       <small>Pesanan akan dibatalkan otomatis oleh sistem jika batas waktu habis.</small>
     </div>
 
+    <!-- Kartu Verifikasi OTP Transaksi -->
+    <section class="card" id="otp-section" style="max-width:680px;margin:0 auto 20px">
+      <div class="page-head" style="margin-bottom:14px">
+        <div>
+          <h2 style="font-size:18px;margin:0 0 4px;">Verifikasi OTP Transaksi</h2>
+          <p class="muted" style="margin:0;font-size:13px;">
+            Kode OTP 6-digit telah dikirimkan ke email <strong th:text="${transaksi.pelanggan.email}">user@email.com</strong>.
+          </p>
+        </div>
+        <span id="otp-badge" th:class="${transaksi.otpVerified} ? 'badge' : 'badge badge-warning'"
+              th:style="${transaksi.otpVerified} ? 'background:#52c41a;color:#fff;' : ''"
+              th:text="${transaksi.otpVerified} ? 'OTP Terverifikasi' : 'Menunggu Verifikasi OTP'">Menunggu Verifikasi OTP</span>
+      </div>
+
+      <!-- Kotak Alert Status OTP -->
+      <div id="otp-alert" style="display:none;padding:10px 14px;border-radius:6px;margin-bottom:14px;font-size:13px;"></div>
+
+      <!-- Container Input Form OTP -->
+      <div id="otp-input-container" th:style="${transaksi.otpVerified} ? 'display:none;' : 'display:block;'">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+          <input type="text" id="otp-input" maxlength="6" pattern="[0-9]{6}" placeholder="6 digit kode OTP"
+                 class="input" style="flex:1;min-width:180px;font-size:18px;letter-spacing:6px;text-align:center;font-weight:bold;"
+                 autocomplete="one-time-code" />
+          <button type="button" id="verify-otp-btn" class="btn btn-primary" style="padding:10px 20px;">
+            Verifikasi OTP
+          </button>
+        </div>
+
+        <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;">
+          <span id="otp-attempts-info" class="muted">Batas percobaan: 5 kali.</span>
+          <div style="display:flex;align-items:center;gap:6px;">
+            <button type="button" id="resend-otp-btn" class="btn btn-secondary" style="font-size:12px;padding:6px 12px;">
+              Kirim Ulang OTP
+            </button>
+            <span id="resend-timer" class="muted" style="display:none;font-size:12px;"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Container Tampilan Sukses OTP -->
+      <div id="otp-success-container" th:style="${transaksi.otpVerified} ? 'display:block;' : 'display:none;'"
+           style="padding:12px;background:rgba(82, 196, 26, 0.1);border:1px solid #52c41a;border-radius:6px;color:#52c41a;font-size:13px;text-align:center;">
+        ✓ OTP Transaksi Anda telah terverifikasi. Silakan lanjutkan pembayaran di bawah ini.
+      </div>
+    </section>
+
+    <!-- Kartu Ringkasan Pesanan -->
     <section class="card" style="max-width:680px;margin:0 auto">
       <div class="page-head" style="margin-bottom:18px">
         <div>
@@ -32,6 +81,10 @@
 
       <div class="stat-list">
         <div>
+          <span>Nomor Pesanan</span>
+          <strong th:text="${transaksi.nomorPesanan}">ORDER-12345678</strong>
+        </div>
+        <div>
           <span>Judul Film</span>
           <strong th:text="${jadwal.film.judul}">Midnight Signal</strong>
         </div>
@@ -41,7 +94,6 @@
         </div>
         <div>
           <span>Studio & Tipe</span>
-          <!-- Menampilkan nama studio beserta tipe studio dari database (null-safe) -->
           <strong th:text="${jadwal.studio.nama + (jadwal.studio.tipe != null ? ' · ' + jadwal.studio.tipe.nama : '')}">Studio 1 · Regular 2D</strong>
         </div>
         <div>
@@ -59,7 +111,11 @@
       </div>
 
       <div style="margin-top:28px">
-        <button id="pay-button" class="btn btn-primary" style="width:100%; border: none;">Bayar Sekarang dengan Payment Gateway →</button>
+        <button id="pay-button" class="btn btn-primary"
+                th:disabled="${!transaksi.otpVerified}"
+                th:style="${!transaksi.otpVerified} ? 'width:100%;border:none;opacity:0.5;cursor:not-allowed;' : 'width:100%;border:none;'">
+          Bayar Sekarang dengan Payment Gateway →
+        </button>
         <a class="btn btn-secondary" style="width:100%;margin-top:10px" th:href="@{/pilih-kursi(jadwalId=${jadwal.id})}">Ubah Kursi</a>
       </div>
 
@@ -68,28 +124,272 @@
               th:data-client-key="${appConfig != null ? appConfig.paymentClientKey : ''}"></script>
       <script th:inline="javascript">
         /*<![CDATA[*/
-        const snapToken = /*[[${token}]]*/ null;
+        const transaksiId = /*[[${transaksi.id}]]*/ 0;
+        let isOtpVerified = /*[[${transaksi.otpVerified}]]*/ false;
+        let activeSnapToken = /*[[${token}]]*/ null;
+        const csrfToken = /*[[${_csrf.token}]]*/ '';
+        const csrfHeaderName = /*[[${_csrf.headerName}]]*/ 'X-CSRF-TOKEN';
         /*]]>*/
-        
-        document.getElementById('pay-button').addEventListener('click', function () {
-            if (snapToken) {
-                window.snap.pay(snapToken, {
-                    onSuccess: function(result){
-                        // Redirect ke halaman tiket saya
-                        window.location.href = "/daftar-tiket";
+
+        document.addEventListener('DOMContentLoaded', function () {
+            const otpInput = document.getElementById('otp-input');
+            const verifyBtn = document.getElementById('verify-otp-btn');
+            const resendBtn = document.getElementById('resend-otp-btn');
+            const resendTimerEl = document.getElementById('resend-timer');
+            const otpAlertEl = document.getElementById('otp-alert');
+            const otpBadgeEl = document.getElementById('otp-badge');
+            const otpAttemptsInfo = document.getElementById('otp-attempts-info');
+            const otpInputContainer = document.getElementById('otp-input-container');
+            const otpSuccessContainer = document.getElementById('otp-success-container');
+            const payButton = document.getElementById('pay-button');
+
+            function showAlert(message, isSuccess) {
+                otpAlertEl.style.display = 'block';
+                if (isSuccess) {
+                    otpAlertEl.style.backgroundColor = 'rgba(82, 196, 26, 0.15)';
+                    otpAlertEl.style.color = '#52c41a';
+                    otpAlertEl.style.border = '1px solid #52c41a';
+                } else {
+                    otpAlertEl.style.backgroundColor = 'rgba(255, 77, 79, 0.15)';
+                    otpAlertEl.style.color = '#ff4d4f';
+                    otpAlertEl.style.border = '1px solid #ff4d4f';
+                }
+                otpAlertEl.textContent = message;
+            }
+
+            function setVerifiedState(snapToken) {
+                isOtpVerified = true;
+                activeSnapToken = snapToken;
+
+                otpBadgeEl.className = 'badge';
+                otpBadgeEl.style.background = '#52c41a';
+                otpBadgeEl.style.color = '#fff';
+                otpBadgeEl.textContent = 'OTP Terverifikasi';
+
+                otpInputContainer.style.display = 'none';
+                otpSuccessContainer.style.display = 'block';
+
+                payButton.disabled = false;
+                payButton.style.opacity = '1';
+                payButton.style.cursor = 'pointer';
+            }
+
+            let countdownInterval = null;
+            function startResendCountdown(seconds) {
+                resendBtn.disabled = true;
+                resendBtn.style.opacity = '0.6';
+                resendBtn.style.cursor = 'not-allowed';
+                resendTimerEl.style.display = 'inline';
+
+                let remaining = seconds;
+                resendTimerEl.textContent = '(' + remaining + 's)';
+
+                if (countdownInterval) clearInterval(countdownInterval);
+
+                countdownInterval = setInterval(function () {
+                    remaining--;
+                    if (remaining <= 0) {
+                        clearInterval(countdownInterval);
+                        resendBtn.disabled = false;
+                        resendBtn.style.opacity = '1';
+                        resendBtn.style.cursor = 'pointer';
+                        resendTimerEl.style.display = 'none';
+                    } else {
+                        resendTimerEl.textContent = '(' + remaining + 's)';
+                    }
+                }, 1000);
+            }
+
+            // Verifikasi OTP
+            function doVerifyOtp() {
+                const otpCode = otpInput ? otpInput.value.trim() : '';
+                if (!otpCode || otpCode.length !== 6) {
+                    showAlert('Silakan masukkan 6 digit kode OTP.', false);
+                    return;
+                }
+
+                verifyBtn.disabled = true;
+                verifyBtn.textContent = 'Memverifikasi...';
+
+                fetch('/api/payment/verify-otp', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        [csrfHeaderName]: csrfToken
                     },
-                    onPending: function(result){
-                        alert("Pembayaran tertunda. Silahkan periksa daftar transaksi Anda.");
-                    },
-                    onError: function(result){
-                        alert("Pembayaran gagal!");
-                    },
-                    onClose: function(){
-                        alert('Anda menutup popup sebelum menyelesaikan pembayaran');
+                    body: JSON.stringify({
+                        transaksiId: transaksiId,
+                        otpCode: otpCode
+                    })
+                })
+                .then(function (res) {
+                    return res.json().then(function (data) {
+                        return { status: res.status, data: data };
+                    });
+                })
+                .then(function (result) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verifikasi OTP';
+
+                    if (result.status === 200 && result.data.otpVerified) {
+                        showAlert('OTP berhasil diverifikasi!', true);
+                        setVerifiedState(result.data.snapToken);
+                    } else {
+                        const errMsg = (result.data && result.data.error) ? result.data.error : 'Verifikasi OTP gagal.';
+                        showAlert(errMsg, false);
+
+                        if (result.data && result.data.remainingAttempts !== undefined) {
+                            otpAttemptsInfo.textContent = 'Sisa percobaan: ' + result.data.remainingAttempts + ' kali.';
+                            otpAttemptsInfo.style.color = '#ff4d4f';
+                        }
+                        if (result.data && result.data.attemptsExceeded) {
+                            if (otpInput) otpInput.disabled = true;
+                            verifyBtn.disabled = true;
+                            otpAttemptsInfo.textContent = 'OTP telah hangus. Silakan kirim ulang OTP.';
+                        }
+                    }
+                })
+                .catch(function (err) {
+                    verifyBtn.disabled = false;
+                    verifyBtn.textContent = 'Verifikasi OTP';
+                    showAlert('Terjadi kesalahan jaringan saat memverifikasi OTP.', false);
+                });
+            }
+
+            if (verifyBtn) {
+                verifyBtn.addEventListener('click', doVerifyOtp);
+            }
+
+            if (otpInput) {
+                otpInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        doVerifyOtp();
                     }
                 });
-            } else {
-                alert("Token pembayaran tidak valid.");
+            }
+
+            // Kirim Ulang OTP
+            if (resendBtn) {
+                resendBtn.addEventListener('click', function () {
+                    resendBtn.disabled = true;
+                    resendBtn.textContent = 'Mengirim...';
+
+                    fetch('/api/payment/resend-otp', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeaderName]: csrfToken
+                        },
+                        body: JSON.stringify({
+                            transaksiId: transaksiId
+                        })
+                    })
+                    .then(function (res) {
+                        return res.json().then(function (data) {
+                            return { status: res.status, data: data };
+                        });
+                    })
+                    .then(function (result) {
+                        resendBtn.textContent = 'Kirim Ulang OTP';
+
+                        if (result.status === 200) {
+                            showAlert('Kode OTP baru telah dikirimkan ke email Anda. Silakan cek kotak masuk.', true);
+                            if (otpInput) {
+                                otpInput.disabled = false;
+                                otpInput.value = '';
+                            }
+                            if (verifyBtn) verifyBtn.disabled = false;
+                            otpAttemptsInfo.textContent = 'Batas percobaan: 5 kali.';
+                            otpAttemptsInfo.style.color = '';
+                            startResendCountdown(60);
+                        } else {
+                            const errMsg = (result.data && result.data.error) ? result.data.error : 'Gagal mengirim ulang OTP.';
+                            showAlert(errMsg, false);
+                            if (result.data && result.data.retryAfter) {
+                                startResendCountdown(result.data.retryAfter);
+                            } else {
+                                resendBtn.disabled = false;
+                            }
+                        }
+                    })
+                    .catch(function (err) {
+                        resendBtn.textContent = 'Kirim Ulang OTP';
+                        resendBtn.disabled = false;
+                        showAlert('Terjadi kesalahan jaringan saat mengirim ulang OTP.', false);
+                    });
+                });
+            }
+
+            // Tombol Bayar
+            payButton.addEventListener('click', function () {
+                if (!isOtpVerified) {
+                    showAlert('Silakan lakukan verifikasi OTP terlebih dahulu sebelum melanjutkan pembayaran.', false);
+                    return;
+                }
+
+                if (activeSnapToken) {
+                    triggerSnapPay(activeSnapToken);
+                } else {
+                    payButton.disabled = true;
+                    payButton.textContent = 'Memuat Pembayaran...';
+
+                    fetch('/api/payment/snap-token', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            [csrfHeaderName]: csrfToken
+                        },
+                        body: JSON.stringify({
+                            transaksiId: transaksiId
+                        })
+                    })
+                    .then(function (res) {
+                        return res.json().then(function (data) {
+                            return { status: res.status, data: data };
+                        });
+                    })
+                    .then(function (result) {
+                        payButton.disabled = false;
+                        payButton.textContent = 'Bayar Sekarang dengan Payment Gateway →';
+
+                        if (result.status === 200 && result.data.snapToken) {
+                            activeSnapToken = result.data.snapToken;
+                            triggerSnapPay(activeSnapToken);
+                        } else {
+                            const errMsg = (result.data && result.data.error) ? result.data.error : 'Gagal memuat token pembayaran Midtrans.';
+                            alert(errMsg);
+                        }
+                    })
+                    .catch(function (err) {
+                        payButton.disabled = false;
+                        payButton.textContent = 'Bayar Sekarang dengan Payment Gateway →';
+                        alert('Terjadi kesalahan jaringan saat memuat gateway pembayaran.');
+                    });
+                }
+            });
+
+            function triggerSnapPay(token) {
+                if (!window.snap) {
+                    alert('Script pembayaran Midtrans belum termuat. Periksa koneksi internet Anda.');
+                    return;
+                }
+
+                window.snap.pay(token, {
+                    onSuccess: function (result) {
+                        window.location.href = "/daftar-tiket";
+                    },
+                    onPending: function (result) {
+                        alert("Pembayaran tertunda. Silakan periksa daftar transaksi Anda.");
+                        window.location.href = "/daftar-tiket";
+                    },
+                    onError: function (result) {
+                        alert("Pembayaran gagal!");
+                    },
+                    onClose: function () {
+                        alert('Anda menutup popup sebelum menyelesaikan pembayaran.');
+                    }
+                });
             }
         });
       </script>
@@ -117,4 +417,3 @@
   </nav>
 </body>
 </html>
-

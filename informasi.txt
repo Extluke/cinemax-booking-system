@@ -1,0 +1,777 @@
+====================================================================================================
+                        DOKUMENTASI LENGKAP & SPESIFIKASI FITUR
+                         CINEMAX BOOKING SYSTEM (CINEPLEX)
+====================================================================================================
+Nama Aplikasi : Cinemax - Sistem Manajemen Bioskop & Online Ticketing Terpadu
+Konteks       : Proyek Tugas Besar Rekayasa Perangkat Lunak / IPPL Semester 5
+Versi         : 1.0.1 (Enterprise Architecture & Security Hardened)
+Tech Stack    : Java 17, Spring Boot 3.x, Spring Data JPA / Hibernate, Spring Security 6, 
+                MySQL, Thymeleaf, Vanilla JavaScript (ES6+), Midtrans Payment Gateway, Chart.js
+Port Server   : 8081 (http://localhost:8081)
+====================================================================================================
+
+
+----------------------------------------------------------------------------------------------------
+BAGIAN 1: DESKRIPSI APLIKASI DAN PANDUAN PENGGUNAAN
+----------------------------------------------------------------------------------------------------
+
+1.1 APA ITU CINEMAX BOOKING SYSTEM?
+Cinemax Booking System adalah aplikasi berbasis web berskala enterprise yang dirancang khusus untuk 
+mengotomatisasi seluruh proses operasional bioskop modern dan menyediakan pengalaman pemesanan tiket 
+bioskop digital (online ticketing) secara real-time bagi penonton.
+
+Aplikasi ini mengintegrasikan 3 pilar utama:
+1. Platform Pelanggan (Public & Customer Portal): Menghadirkan katalog film interaktif, pemilihan 
+   jadwal tayang dinamis, pemilihan denah kursi interaktif dengan ragam kelas kursi, checkout otomatis 
+   dengan payment gateway Midtrans (QRIS, GoPay, Virtual Account, Kartu Kredit), penerbitan e-ticket 
+   digital mandiri ber-QR Code, hingga fasilitas pengajuan pengembalian dana (refund) mandiri.
+2. Sistem Operasional Staf/Kasir (Admin Portal): Menyediakan dasbor kontrol terpusat untuk memantau 
+   transaksi, mengelola katalog film, mengontrol genre, merancang timeline jadwal tayang visual yang 
+   mencegah bentrok jam pemutaran, mengatur layout ruangan dan kursi berbasis kuas (canvas brush), 
+   menayangkan banner promo promosi, serta memverifikasi pengajuan refund.
+3. Kontrol Manajerial & Keamanan (Super Admin Portal): Menyajikan analitik visual pendapatan 
+   menggunakan grafik tren harian dan proporsi film (Chart.js), pemantauan jejak audit log keamanan 
+   sistem real-time, manajemen otoritas akun staf, serta konfigurasi global bioskop (jam buka/tutup 
+   harian, integrasi Midtrans Sandbox/Production, tarif pajak/layanan, batas waktu H- jam refund).
+
+1.2 TATA CARA MENGGUNAKAN DAN MENJALANKAN APLIKASI
+A. Prasyarat Sistem:
+   - JDK (Java Development Kit) Versi 17 atau lebih baru terpasang di sistem.
+   - MySQL Server (misalnya melalui XAMPP atau MySQL Community Server) aktif pada port 3306.
+   - Peramban web modern (Google Chrome, Mozilla Firefox, Microsoft Edge, dll).
+
+B. Langkah Menjalankan Server Aplikasi:
+   1. Nyalakan modul MySQL pada XAMPP Control Panel.
+   2. Buka phpMyAdmin (http://localhost/phpmyadmin) atau terminal MySQL, lalu buat database kosong:
+      CREATE DATABASE cinemax_db;
+   3. Pastikan konfigurasi database di `src/main/resources/application.properties` sudah sesuai:
+      - server.port=8081
+      - spring.datasource.url=jdbc:mysql://localhost:3306/cinemax_db?serverTimezone=Asia/Jakarta&useSSL=false
+      - spring.datasource.username=root
+      - spring.datasource.password=
+      - spring.jpa.database-platform=org.hibernate.dialect.MySQLDialect
+   4. Buka terminal/PowerShell di direktori proyek Cinemax, lalu jalankan perintah:
+      Windows    : .\mvnw.cmd spring-boot:run
+      Linux/Mac  : ./mvnw spring-boot:run
+   5. Tunggu hingga terminal memunculkan pesan "Started CinemaxApplication".
+   6. Buka peramban dan akses: http://localhost:8081
+
+C. Akun Bawaan (Default Dummy Accounts dari DataSeeder):
+   Sistem secara otomatis menginisialisasi akun awal saat pertama kali dijalankan:
+   - Akun Super Admin:
+     * Email    : superadmin@cineplex.com
+     * Password : superadmin123
+     * Role     : ROLE_SUPER_ADMIN (Akses penuh seluruh fitur admin + sistem + laporan)
+   - Akun Admin (Staf / Kasir):
+     * Email    : admin@cineplex.com
+     * Password : admin123
+     * Role     : ROLE_ADMIN (Akses operasional: film, jadwal, studio, transaksi, refund, promo)
+   - Akun Pelanggan (User):
+     * Pengunjung umum dapat mendaftar mandiri melalui menu "Daftar" di halaman utama.
+
+D. Alur Penggunaan (End-to-End User Flow):
+   1. Alur Pelanggan (User):
+      Buka Beranda -> Lihat Film Sedang Tayang / Buka Jelajah Film -> Klik Film -> Lihat Detail & Jadwal 
+      -> Pilih Hari & Jam Tayang -> Pilih Kursi Bioskop -> Klik Lanjut Checkout -> Periksa Faktur 
+      Ringkasan Pesanan -> Klik Bayar (Muncul Midtrans Snap Popup) -> Selesaikan Pembayaran -> 
+      Buka Menu Tiket Saya -> Buka E-Tiket untuk melihat detail barcode & QR Code (dapat dicetak) -> 
+      Jika ada halangan, ajukan refund sebelum batas waktu H- jam penayangan.
+   2. Alur Staf / Admin:
+      Masuk dengan email staf -> Masuk ke Dashboard Admin -> Pantau okupansi studio & transaksi harian -> 
+      Kelola data film & unggah poster potret -> Atur jadwal tayang pada matriks waktu studio -> 
+      Tinjau data transaksi penjualan -> Proses pengajuan refund dari pelanggan (setujui / tolak).
+   3. Alur Super Admin:
+      Masuk dengan email Super Admin -> Pantau Laporan Analitik Pendapatan & Grafik Penjualan -> 
+      Kelola akun staf (tambah/hapus hak akses) -> Pantau Audit Log atas seluruh aktivitas sistem -> 
+      Sesuaikan konfigurasi bioskop (nama, alamat, jam operasional hari kerja/akhir pekan, kunci Midtrans, 
+      kebijakan potongan biaya refund).
+
+
+====================================================================================================
+BAGIAN 2: RINCIAN FITUR LENGKAP BERDASARKAN ROLE & HALAMAN
+====================================================================================================
+
+----------------------------------------------------------------------------------------------------
+2.1 ROLE USER (PELANGGAN / CUSTOMER & PENGUNJUNG UMUM)
+----------------------------------------------------------------------------------------------------
+
+1. HALAMAN BERANDA (PUBLIC HOME PAGE)
+   URL Endpoint: GET `/`
+   Template    : `src/main/resources/templates/beranda.html`
+   Akses       : Publik (Tamu tanpa login maupun Pelanggan yang telah login)
+   Rincian Fitur:
+   - Header Navigasi Dinamis:
+     * Brand logo bioskop yang namanya disinkronkan otomatis dari konfigurasi database bioskop.
+     * Navigasi utama: Beranda, Film (Jelajah), Tiket Saya.
+     * Tombol autentikasi dinamis (menampilkan "Masuk" dan "Daftar" untuk tamu; menampilkan 
+       "Dashboard Admin" khusus role staf/super admin, nama/inisial akun, dan tombol "Keluar" 
+       jika sudah terautentikasi).
+   - Banner Promosi CMS Interaktif:
+     * Menampilkan daftar banner promo yang statusnya aktif dan berada dalam rentang tanggal berlaku.
+     * Poster promo landscape dengan overlay informasi judul promo dan aksi klik menuju detail promo 
+       atau tautan target promosi yang disanitasi keamanannya.
+   - Section Hero Film Unggulan (Featured Movie):
+     * Menampilkan film terpopuler berstatus "SEDANG_TAYANG".
+     * Menyajikan lencana status penayangan, judul film, metadata badge genre lengkap, batas usia 
+       penonton (SU, 13+, 17+, 21+), durasi film, serta sinopsis cerita.
+     * Tombol aksi ganda: "Lihat Detail" (membuka detail film) dan "Beli Tiket Sekarang" (langsung 
+       menuju jadwal tayang).
+   - Section Film Sedang Tayang (Now Playing Grid):
+     * Deretan kartu film (movie cards) dengan poster beresolusi proporsional.
+     * Dilengkapi fallback gradient dinamis jika film belum memiliki poster.
+     * Menampilkan judul film, gabungan genre, serta batas usia penonton.
+     * Tautan pintas menuju katalog lengkap melalui tombol "Jelajahi semua film".
+   - Highlight Informasi Bioskop:
+     * Kartu Lokasi: Menampilkan nama bioskop dan alamat fisik yang diatur oleh pengelola.
+     * Kartu Layanan: Menampilkan nomor kontak Customer Service / WhatsApp resmi bioskop.
+     * Kartu Tiket Digital: Informasi keunggulan pemesanan tiket online praktis tanpa antre fisik.
+   - Peta Lokasi Bioskop Terintegrasi (Google Maps Embed):
+     * Frame peta Google Maps interaktif yang disematkan langsung di halaman beranda berdasarkan 
+       URL embed resmi pada konfigurasi bioskop.
+     * Tombol eksternal "Buka di Google Maps" untuk navigasi langsung via aplikasi Google Maps gawai.
+   - Mobile Responsive Bottom Navigation:
+     * Bilah navigasi bawah khusus layar seluler dengan ikon: Beranda, Film, Tiket Saya, dan Akun.
+
+2. HALAMAN JELAJAH KATALOG FILM
+   URL Endpoint: GET `/jelajah`
+   Template    : `src/main/resources/templates/jelajah.html`
+   Akses       : Publik (Semua Pengguna)
+   Rincian Fitur:
+   - Pencarian Instan Judul Film (Live Client Search):
+     * Kolom pencarian interaktif yang menyaring judul film secara real-time saat pengguna mengetik.
+   - Filter Kategori Genre:
+     * Dropdown pilihan genre film yang diambil secara dinamis dari tabel genre database.
+     * Mampu memadukan pencarian judul bersamaan dengan pemilihan genre.
+   - Penghitung Film Dinamis (Dynamic Counter):
+     * Teks penghitung interaktif yang menampilkan jumlah film yang sedang lolos penyaringan 
+       (misal: "Menampilkan 6 film").
+   - Grid Kartu Film Komprehensif:
+     * Poster film, badge genre, judul film, durasi waktu putar, batas usia penonton, serta tombol 
+       "Lihat Jadwal".
+   - State Tampilan Kosong (Empty State Handler):
+     * Menampilkan pesan interaktif jika film yang dicari tidak ditemukan atau katalog masih kosong.
+
+3. HALAMAN DETAIL FILM
+   URL Endpoint: GET `/film/{filmId}`
+   Template    : `src/main/resources/templates/detail_film.html`
+   Akses       : Publik (Semua Pengguna)
+   Rincian Fitur:
+   - Profil Sinematik Film:
+     * Poster utama film ukuran besar dengan proteksi aspect ratio potret.
+     * Kumpulan lencana informasi: Genre film, Batas Usia penonton, dan Status Penayangan.
+     * Judul film, durasi putar, dan teks sinopsis cerita yang memikat.
+     * Tombol navigasi "Kembali ke katalog".
+   - Selector Penanggalan Jadwal Tayang (Schedule Date Picker):
+     * Bilah kartu pilihan hari tayang selama 7 hari ke depan (Hari Ini hingga H+6).
+     * Memberikan visual aktif pada tanggal yang sedang dipilih.
+   - Pengelompokan Jadwal Berdasarkan Studio (Grouped by Studio):
+     * Menampilkan kartu studio penayangan lengkap dengan nama studio, tipe studio (Regular 2D, 
+       IMAX, Velvet, dll.), deskripsi studio, serta total kapasitas kursi.
+     * Daftar tombol jam penayangan (Showtime Buttons) yang dapat digulir horizontal secara halus 
+       pada perangkat layar sentuh.
+     * Setiap tombol jam memuat jam mulai tayang serta nominal harga tiket (Rp) per pertunjukan.
+     * Klik pada jam tayang akan mengarahkan pengguna ke halaman pemilihan kursi.
+   - Rekomendasi Film Serupa (Related Movies Section):
+     * Menampilkan daftar film sedang tayang lainnya sebagai referensi tontonan alternatif.
+
+4. HALAMAN PILIH JADWAL TAYANG
+   URL Endpoint: GET `/pilih-jadwal?filmId={filmId}`
+   Template    : `src/main/resources/templates/pilih_jadwal.html`
+   Akses       : Publik (Semua Pengguna)
+   Rincian Fitur:
+   - Pemilihan tanggal pertunjukan 7 hari ke depan khusus untuk film yang dipilih.
+   - Pengelompokan jam tayang per studio bioskop.
+   - Validasi pembatasan jadwal: Mencegah manipulasi parameter tanggal lampau atau di luar rentang 
+     7 hari kalender.
+
+5. HALAMAN PILIH KURSI (SEAT LAYOUT & REAL-TIME SELECTION)
+   URL Endpoint: GET `/pilih-kursi?jadwalId={jadwalId}`
+   Template    : `src/main/resources/templates/pilih_kursi.html`
+   Akses       : Wajib Login (`ROLE_USER`, `ROLE_ADMIN`, `ROLE_SUPER_ADMIN`)
+   Rincian Fitur:
+   - Indikator Langkah Pesanan: Lencana "Langkah 2/3" sebagai penunjuk alur pemesanan.
+   - Header Ringkasan Jadwal: Menampilkan judul film, nama studio, tipe studio, serta tanggal dan 
+     jam tayang yang dipilih.
+   - Canvas Denah Kursi Interaktif:
+     * Representasi visual "LAYAR BIOSKOP" di bagian atas denah.
+     * Grid kursi yang dipetakan sesuai matriks baris (A, B, C, ...) dan kolom (1, 2, 3, ...).
+     * Dukungan visual lorong / jalan setapak (walkway) yang tidak dapat diklik.
+     * Dukungan variasi kelas kursi:
+       - Kursi Reguler standar.
+       - Kursi Sweetbox (kursi berpasangan dengan span kolom 2).
+       - Kursi Premiere / VIP.
+     * Status visual kursi:
+       - Kursi Tersedia (Available): Dapat diklik dan dipilih oleh pengguna.
+       - Kursi Terisi (Occupied): Berwarna abu-abu, nonaktif, dan tidak dapat dipilih karena telah 
+         dipesan orang lain.
+       - Kursi Terpilih (Selected): Berubah warna menjadi warna primer bioskop saat dipilih.
+   - Fitur Geser Horizontal (Horizontal Scroll Hint) untuk kenyamanan tampilan di smartphone.
+   - Sticky Bottom Checkout Bar:
+     * Legenda warna kursi (Reguler, Sweetbox, Premiere, Terisi, Dipilih).
+     * Indikator penghitung waktu mundur transaksi (Countdown timer).
+     * Penghitungan total harga bayar secara dinamis dan real-time sesuai jumlah kursi yang diklik 
+       menggunakan format mata uang Rupiah (IDR).
+     * Tombol "Lanjut Checkout ->" dengan indikator status loading "Memproses...".
+   - Proteksi Keamanan Backend pada Pemilihan Kursi:
+     * Pengiriman data via AJAX POST ke `/api/payment/checkout` disertai X-CSRF-TOKEN.
+     * Proteksi Race Condition & Double Booking: Sistem memverifikasi kembali status ketersediaan kursi 
+       di database tepat sebelum token transaksi diterbitkan. Jika ada pengguna lain yang memesan 
+       kursi tersebut selang beberapa milidetik sebelumnya, sistem otomatis menolak dan memunculkan 
+       peringatan ramah.
+     * Proteksi IDOR (Insecure Direct Object Reference): Sistem mengabaikan manipulasi ID pengguna dari 
+       request payload dan selalu mengikat transaksi ke email pengguna yang sedang login di Spring Security.
+
+6. HALAMAN FAKTUR & CHECKOUT PEMBAYARAN
+   URL Endpoint: GET `/faktur?transaksiId={id}&token={snapToken}`
+   Template    : `src/main/resources/templates/faktur_pesanan.html`
+   Akses       : Wajib Login
+   Rincian Fitur:
+   - Indikator Langkah: Lencana "Langkah 3/3" (Menunggu Pembayaran).
+   - Kotak Pengingat Batas Waktu Bayar:
+     * Countdown timer otomatis (15 menit) untuk menyelesaikan tagihan sebelum pesanan dibatalkan sistem.
+   - Rincian Lengkap Faktur Pesanan:
+     * Nomor Pesanan / Order ID unik (format: ORDER-XXXXXXXX).
+     * Judul film yang dipesan.
+     * Jadwal tayang (Hari, Tanggal, Bulan, Tahun, Jam WIB).
+     * Nama Studio beserta Tipe Studio penayangan.
+     * Rincian nomor kursi yang berhasil dipesan beserta total kuantitas tiket (misal: "A7, A8 (2 Tiket)").
+     * Breakdown perhitungan harga: [Jumlah Tiket] x [Harga Satuan] = [Subtotal Tiket].
+     * Total Nominal Pembayaran Akhir yang ditonjolkan secara jelas.
+   - Integrasi Midtrans Snap Payment Gateway:
+     * Pemuatan script Midtrans Snap JS secara dinamis (otomatis menyesuaikan lingkungan Sandbox 
+       atau Production berdasarkan konfigurasi bioskop).
+     * Tombol interaktif "Bayar Sekarang dengan Payment Gateway ->" yang memicu popup modal Midtrans Snap.
+     * Mendukung multi-channel pembayaran: QRIS (GoPay, OVO, Dana, LinkAja), Virtual Account Bank 
+       (BCA, Mandiri, BNI, BRI, Permata), Kartu Kredit/Debit, dan gerai retail.
+     * Penanganan callback transaksi otomatis:
+       - onSuccess: Pengguna otomatis dialihkan ke halaman "Tiket Saya".
+       - onPending: Notifikasi instruksi penyelesaian tagihan tertunda.
+       - onError: Notifikasi kegagalan pembayaran.
+       - onClose: Notifikasi peringatan saat pengguna menutup jendela sebelum transaksi selesai.
+   - Tombol Navigasi Alternatif "Ubah Kursi" untuk kembali ke denah pemilihan jika berubah pikiran.
+
+7. HALAMAN DAFTAR TIKET SAYA (MY TICKETS & TRANSACTION HISTORY)
+   URL Endpoint: GET `/daftar-tiket` atau `/tiket-saya`
+   Template    : `src/main/resources/templates/daftar_tiket.html`
+   Akses       : Wajib Login
+   Rincian Fitur:
+   - Filter Tab Kategori Transaksi:
+     * Tab "Semua Tiket": Menampilkan seluruh riwayat pesanan tiket dari waktu ke waktu.
+     * Tab "Tiket Aktif": Menyaring hanya tiket bioskop yang transaksinya telah lunas (SUCCESS), 
+       belum melewati jam tayang film, dan tidak sedang dalam sengketa refund.
+     * Tab "Menunggu Pembayaran": Menyaring pesanan yang masih berstatus PENDING agar pengguna dapat 
+       melanjutkan pembayaran sebelum batas waktu kedaluwarsa.
+     * Tab "Riwayat Selesai": Menyaring tiket yang filmnya telah selesai ditayangkan atau transaksi 
+       yang telah berstatus refund / dibatalkan.
+   - Kartu Riwayat Tiket Komprehensif:
+     * Lencana Status Tiket (PAID, MENUNGGU PEMBAYARAN, MENUNGGU PERSETUJUAN REFUND, REFUND DITERIMA, 
+       SUKSES DANA DIKEMBALIKAN, REFUND DITOLAK).
+     * Judul film, waktu tayang lengkap dengan hari dan zona waktu WIB, nama dan tipe studio, serta 
+       rincian deretan kursi.
+     * Ringkasan total nominal pembayaran transaksi.
+     * Tombol aksi kontekstual:
+       - "Buka E-Tiket & QR Code ->" untuk tiket lunas.
+       - "Lanjut Pembayaran ->" untuk transaksi pending menuju faktur.
+       - "Lihat Status Refund ->" untuk tiket yang telah diajukan pengembalian dananya.
+
+8. HALAMAN DETAIL E-TIKET DIGITAL & PENGAJUAN REFUND MANDIRI
+   URL Endpoint: GET `/detail-tiket?transaksiId={id}`
+   Template    : `src/main/resources/templates/detail_tiket.html`
+   Akses       : Wajib Login (Dilindungi verifikasi kepemilikan akun)
+   Rincian Fitur:
+   - Desain Tiket Bioskop Digital Elegan:
+     * Watermark dan brand resmi bioskop.
+     * Lencana status pembayaran lunas.
+     * Judul film, tanggal, hari, dan jam mulai pemutaran film.
+     * Informasi studio dan tipe penayangan.
+     * Nomor kursi yang dicetak dengan penekanan visual warna primer.
+     * Komponen QR Code / Barcode tiket unik yang siap dipindai oleh barcode scanner pintu masuk studio.
+     * Kode Order Pesanan dan catatan operasional: "Gate buka 15 menit sebelum film dimulai".
+   - Tombol Cetak Tiket Fisik (Print Friendly):
+     * Tombol "Cetak Tiket" yang memicu dialog pencetakan printer (`window.print()`) dengan CSS 
+       khusus print yang rapi.
+   - Form Pengajuan Refund Mandiri oleh Pelanggan:
+     * Sistem memvalidasi kelayakan refund berdasarkan:
+       1. Status transaksi wajib SUCCESS (Lunas).
+       2. Transaksi belum pernah diajukan refund atau pengajuan sebelumnya ditolak.
+       3. Waktu pengajuan belum melewati batas waktu toleransi H- jam (default H-2 jam sebelum waktu 
+          mulai film sesuai konfigurasi `refundTimeLimitHours` bioskop).
+     * Isian formulir refund:
+       - Alasan pengajuan refund (textarea maksimal 2000 karakter).
+       - Nama lengkap pemilik rekening bank / dompet digital.
+       - Nomor rekening bank / nomor e-wallet tujuan pengembalian dana (validasi pola regex keamanan).
+     * Dialog konfirmasi persetujuan sebelum pengajuan dikirimkan.
+   - Indikator Peringatan Batas Waktu Refund:
+     * Menampilkan pesan pemberitahuan otomatis jika waktu telah melewati batas H-2 jam sehingga form 
+       refund dinonaktifkan secara aman.
+   - Pelacak Status Refund Real-Time:
+     * Menampilkan kotak status perkembangan refund: Menunggu Persetujuan Admin, Disetujui (Dana 
+       sedang diproses), Selesai (Dana telah ditransfer), atau Ditolak.
+     * Jika ditolak, sistem menampilkan catatan alasan penolakan resmi dari administrator bioskop.
+
+9. HALAMAN DETAIL PROMOSI
+   URL Endpoint: GET `/promo/detail-{id}`
+   Template    : `src/main/resources/templates/detail_promosi.html`
+   Akses       : Publik (Semua Pengguna)
+   Rincian Fitur:
+   - Banner promosi ukuran besar.
+   - Lencana status promo dan periode masa berlaku penayangan (Tanggal Mulai hingga Tanggal Berakhir).
+   - Judul promosi dan syarat ketentuan program promo.
+   - Tombol "Pesan Tiket Sekarang" yang mengarahkan pelanggan langsung ke katalog penayangan film.
+
+10. HALAMAN PENGATURAN PROFIL PENGGUNA
+    URL Endpoint: GET `/profil`, POST `/edit-profil`
+    Template    : `src/main/resources/templates/profil.html`
+    Akses       : Wajib Login
+    Rincian Fitur:
+    - Ringkasan Profil Pengguna:
+      * Avatar inisial nama otomatis berdasarkan nama lengkap pengguna.
+      * Nama pengguna dan badge peran keanggotaan (MEMBER).
+    - Formulir Pembaruan Informasi Akun:
+      * Kolom edit Nama Lengkap.
+      * Kolom Email terdaftar (bersifat Read-Only untuk melindungi integritas akun autentikasi).
+      * Kolom Kata Sandi Baru (opsional, dilengkapi enkripsi otomatis BCrypt jika diisi).
+    - Tautan pintas ke menu riwayat tiket serta tombol "Keluar Akun" (Logout aman via Spring Security POST).
+
+11. HALAMAN AUTENTIKASI: MASUK (LOGIN)
+    URL Endpoint: GET `/login`, POST `/login-process`
+    Template    : `src/main/resources/templates/login.html`
+    Akses       : Publik
+    Rincian Fitur:
+    - Form login berbasis Email dan Password.
+    - Notifikasi pesan galat kontekstual jika kombinasi email/password salah.
+    - Notifikasi sukses registrasi atau sukses reset kata sandi.
+    - Tautan bantuan "Lupa password?" dan tautan menuju halaman registrasi akun.
+    - Custom Authentication Success Handler: Mengarahkan secara pintar; peran `ROLE_ADMIN` dan 
+      `ROLE_SUPER_ADMIN` langsung diarahkan ke Dashboard Admin (`/admin/dashboard`), sedangkan 
+      `ROLE_USER` diarahkan ke Beranda (`/`).
+
+12. HALAMAN PENDAFTARAN AKUN (REGISTER)
+    URL Endpoint: GET `/register`, POST `/register-process`
+    Template    : `src/main/resources/templates/register.html`
+    Akses       : Publik
+    Rincian Fitur:
+    - Input formulir: Nama Lengkap, Alamat Email, dan Kata Sandi.
+    - Validasi keamanan kata sandi minimal 8 karakter.
+    - Validasi duplikasi email: Mencegah pendaftaran ganda jika alamat email sudah terdaftar di sistem.
+    - Hashing password otomatis menggunakan algoritma kuat BCrypt Password Encoder sebelum disimpan ke database.
+
+13. HALAMAN LUPA PASSWORD & RESET PASSWORD (MAILTRAP SMTP INTEGRATION)
+    URL Endpoint: GET `/lupa-password`, POST `/forgot-password-process`, 
+                  GET `/reset-password?token=...`, POST `/reset-password-process`
+    Template    : `src/main/resources/templates/lupa_password.html`, `src/main/resources/templates/reset_password.html`
+    Akses       : Publik
+    Rincian Fitur:
+    - Pengiriman Permintaan Reset: Pengguna memasukkan alamat email terdaftar.
+    - Pembuatan Token Keamanan Kriptografis: Sistem men-generate token unik berbatas waktu kedaluwarsa.
+    - Integrasi Pengiriman Email SMTP (Mailtrap / Production Mailer): Sistem mengirimkan tautan reset 
+      password ke kotak masuk email pengguna secara otomatis.
+    - Form Password Baru: Validasi token reset (jika token tidak valid atau kedaluwarsa, akses ditolak), 
+      input kata sandi baru minimal 8 karakter, serta konfirmasi pembaharuan sandi.
+
+14. HALAMAN ERROR AKSES DITOLAK (HTTP 403 FORBIDDEN)
+    URL Endpoint: GET `/error/403`
+    Template    : `src/main/resources/templates/error/akses_ditolak.html`
+    Akses       : Pengguna yang mencoba mengakses rute di luar wewenangnya
+    Rincian Fitur:
+    - Tampilan peringatan ramah bahwa peran pengguna tidak memiliki izin mengakses halaman tersebut 
+      (misal: pelanggan biasa mencoba membuka rute `/admin/**`).
+    - Tombol pintas untuk masuk menggunakan akun lain atau kembali ke beranda utama.
+
+
+----------------------------------------------------------------------------------------------------
+2.2 ROLE ADMIN (STAF OPERASIONAL & KASIR BIOSKOP)
+----------------------------------------------------------------------------------------------------
+Admin memiliki wewenang mengelola seluruh kegiatan operasional harian bioskop.
+
+1. HALAMAN DASHBOARD ADMIN
+   URL Endpoint: GET `/admin/dashboard`
+   Template    : `src/main/resources/templates/admin/dashboard_admin.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Ringkasan Metrik Kunci Harian (Metric Cards Grid 4):
+     * Tiket Terjual Hari Ini: Menghitung total tiket dari transaksi lunas pada tanggal berjalan.
+     * Total Pendapatan Akumulatif: Akumulasi seluruh omzet penjualan tiket bioskop.
+     * Tiket Terverifikasi: Menghitung tiket dengan status VALID yang siap digunakan menonton.
+     * Permintaan Refund: Menghitung jumlah permohonan refund yang menunggu peninjauan staf (PENDING).
+   - Grafik Tren Penjualan Mingguan:
+     * Visualisasi grafik garis/batang volume tiket terkonfirmasi selama 7 hari terakhir dilengkapi 
+       indikator persentase pertumbuhan.
+   - Pemantau Okupansi Kursi Studio Real-time (Occupancy Tracker):
+     * Menampilkan persentase keterisian kursi per studio untuk seluruh sesi tayang hari ini.
+     * Bilah kemajuan (Progress Bar) dinamis beserta rincian jumlah kursi terisi dibanding total 
+       kapasitas studio (contoh: "Studio 1 (Regular 2D) - 82% (115 / 140 Kursi)").
+   - Tabel 5 Transaksi Penjualan Terkini:
+     * Menampilkan nomor pesanan, nama pelanggan, waktu transaksi, total harga, serta badge status pembayaran.
+   - Tombol Akses Cepat: Tombol "+ Jadwal Baru" dan tombol cetak "Export Laporan".
+
+2. HALAMAN MANAJEMEN FILM (KATALOG FILM ADMIN)
+   URL Endpoint: GET `/admin/manajemen-film`
+   Template    : `src/main/resources/templates/admin/manajemen_film.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Panel Filter & Pencarian Lengkap:
+     * Pencarian berdasarkan kata kunci judul film.
+     * Filter status film: Semua Status, Sedang Tayang, Segera Tayang (Coming Soon), atau Turun Layar (Tidak Tayang).
+     * Filter kategori genre film.
+     * Pengurutan data (Sorting): Berdasarkan data terbaru atau terlama.
+     * Tombol "Terapkan" dan tombol "Reset".
+   - Notifikasi Alert Sistem: Menampilkan alert hijau untuk penambahan/perubahan/penghapusan sukses, 
+     dan alert merah jika terjadi penolakan upload poster (bukan gambar atau poster berbentuk landscape).
+   - Katalog Kartu Film Admin:
+     * Poster film potret dengan fallback gradient.
+     * Badge status film (Tayang / Segera Tayang).
+     * Judul film, daftar relasi genre yang dipisahkan koma, serta durasi menit penayangan.
+     * Tombol aksi "Edit Data" dan tombol pintas jadwal penayangan film tersebut.
+
+3. HALAMAN TAMBAH FILM BARU
+   URL Endpoint: GET `/admin/tambah-film`, POST `/admin/tambah-film`
+   Template    : `src/main/resources/templates/admin/tambah_film.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Area Unggah Poster Interaktif (Dropzone File Upload):
+     * Drag-and-drop atau klik untuk memilih file poster dari komputer.
+     * Mendukung format: PNG, JPG, JPEG, WEBP dengan batas ukuran maksimal 2MB.
+     * Validasi Rasio Gambar Otomatis di Sisi Klien (Frontend Validation): Sistem memeriksa lebar 
+       dan tinggi gambar melalui JavaScript FileReader. Jika gambar berbentuk Lanskap (lebar > tinggi), 
+       sistem langsung menolak unggahan dan mewajibkan gambar Potret dengan rasio 2:3 agar tata letak 
+       website tidak rusak.
+     * Pratinjau langsung poster yang baru dipilih.
+   - Input Metadata Film Lengkap:
+     * Judul Film (wajib diisi).
+     * Durasi Penayangan dalam satuan menit (tipe angka).
+     * Status Penayangan: "Segera Tayang (Coming Soon)" atau "Sedang Tayang (Now Playing)".
+     * Batas Usia Penonton: Pilihan dropdown SU (Semua Umur), 13+ (Remaja), 17+ (Dewasa), 21+ (Khusus).
+     * Pemilihan Kategori Genre (Multi-select Checkbox): Menampilkan seluruh genre dari database; 
+       validasi formulir mewajibkan minimal 1 genre tercentang.
+     * Sinopsis Lengkap Film (textarea narasi film).
+   - Pengamanan Sisi Server: File poster disimpan dengan nama file berbasis UUID yang disanitasi 
+     dari karakter berbahaya guna mencegah serangan Web Shell / Remote Code Execution.
+   - Pencatatan Audit Log: Aktivitas penambahan film otomatis terekam pada Audit Log sistem.
+
+4. HALAMAN EDIT DAN HAPUS FILM
+   URL Endpoint: GET `/admin/edit-film?id={id}`, POST `/admin/edit-film`, POST `/admin/hapus-film/{id}`
+   Template    : `src/main/resources/templates/admin/edit_film.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Pemuatan data lama film ke dalam field formulir.
+   - Kemampuan mempertahankan poster lama atau mengganti dengan file poster potret baru.
+   - Pembaruan multi-genre dengan status checkbox yang sudah tercentang sesuai data sebelumnya.
+   - Tombol "Hapus Film": Dilengkapi modal konfirmasi JavaScript; menghapus film dari database beserta 
+     pembersihan file gambar poster dari server secara otomatis.
+
+5. HALAMAN MANAJEMEN GENRE FILM
+   URL Endpoint: GET `/admin/manajemen-genre`, POST `/admin/hapus-genre/{id}`
+   Template    : `src/main/resources/templates/admin/manajemen_genre.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Tabel Daftar Genre: Menampilkan ID genre, nama genre, dan tombol aksi hapus.
+   - Tombol "+ Tambah Genre" menuju halaman pembuatan genre.
+   - Proteksi Integritas Relasional Database: Jika sebuah genre sedang digunakan oleh satu atau 
+     lebih judul film, aksi penghapusan otomatis dicegah oleh controller (`filmRepository.existsByGenresId`) 
+     dan sistem menampilkan notifikasi: "Gagal Dihapus! Genre ini sedang digunakan oleh film".
+
+6. HALAMAN TAMBAH GENRE FILM
+   URL Endpoint: GET `/admin/tambah-genre`, POST `/admin/tambah-genre`
+   Template    : `src/main/resources/templates/admin/tambah_genre.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Input nama genre baru (contoh: "Sci-Fi", "Horror", "Animation").
+   - Validasi duplikasi: Mencegah penyimpanan genre dengan nama yang sama persis.
+
+7. HALAMAN MANAJEMEN JADWAL PENAYANGAN (VISUAL SCHEDULE MATRIX)
+   URL Endpoint: GET `/admin/manajemen-jadwal`, POST `/admin/tambah-jadwal`, POST `/admin/hapus-jadwal`
+   Template    : `src/main/resources/templates/admin/manajemen_jadwal.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Matriks Timeline Penayangan Visual Interaktif:
+     * Garis waktu horizontal yang memetakan jam operasional bioskop dari jam buka hingga jam tutup 
+       (misal: 06:00 hingga 22:00) yang disesuaikan dari pengaturan hari tersebut.
+     * Baris studio menampilkan jadwal pemutaran film sebagai blok visual proporsional dengan lebar 
+       sesuai durasi film.
+     * Penanda Real-Time Waktu Saat Ini (Red vertical line marker).
+     * Pewarnaan status blok penayangan:
+       - Biru: Status AKTIF (Diterbitkan).
+       - Oranye: Status DRAFT.
+       - Merah: Status SEDANG_TAYANG (Live di bioskop saat ini).
+       - Hijau: Status SELESAI.
+   - Deteksi & Peringatan Bentrok Jadwal (Conflict Collision Detection):
+     * Blok jadwal yang bertabrakan jam tayangnya di studio yang sama akan otomatis disorot merah 
+       dengan ikon peringatan konflik.
+   - Filter Tanggal & Studio: Pemilihan kalender tanggal dan dropdown filter studio bioskop.
+   - Modal Tambah Jadwal Tayang Baru:
+     * Dropdown pilihan film (menampilkan judul dan durasi menit).
+     * Dropdown pilihan studio yang berstatus aktif.
+     * Input tanggal dan jam mulai penayangan.
+     * Input harga tiket dasar (Rp).
+     * Input jeda istirahat pembersihan studio (cleaning buffer, misal 15-20 menit).
+     * Perhitungan otomatis jam selesai tayang berdasarkan durasi film + jeda pembersihan.
+   - Aturan Validasi Penjadwalan Ketat:
+     * Menolak penambahan jadwal yang bertabrakan dengan jadwal lain di studio yang sama.
+     * Menolak jadwal yang dimulai atau berakhir di luar jam operasional bioskop hari tersebut.
+     * Menolak pembuatan jadwal di masa lampau.
+     * Penguncian Jadwal (Locked Schedule): Jadwal yang sedang berlangsung, telah selesai, atau 
+       kurang dari 10 menit sebelum jam tayang tidak dapat diedit/dihapus demi keamanan tiket yang telah terjual.
+
+8. HALAMAN MANAJEMEN RUANGAN / STUDIO
+   URL Endpoint: GET `/admin/manajemen-ruangan`, POST `/admin/hapus-ruangan`
+   Template    : `src/main/resources/templates/admin/manajemen_ruangan.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Tabel Daftar Studio Bioskop:
+     * Nama studio dan tipe studio (Regular, IMAX, Velvet, Atmos).
+     * Kapasitas total kursi aktif dan jumlah baris kursi.
+     * Daftar fasilitas utama yang terpasang pada studio tersebut.
+     * Badge status operasional: Aktif, Renovasi (Pemeliharaan), atau Ditutup.
+   - Filter & Pencarian: Kolom pencarian nama studio dan filter dropdown status operasional.
+   - Aksi Operasional:
+     * Tombol "Edit" untuk mengubah nama, tipe, dan fasilitas studio.
+     * Tombol "Kelola Kursi" untuk membuka editor denah layout kursi.
+     * Tombol "Hapus" (Arsipkan): Sistem melakukan soft-delete atau penonaktifan studio; jika studio 
+       masih memiliki jadwal aktif di masa depan, sistem mencegah penghapusan dengan peringatan aman.
+
+9. HALAMAN TAMBAH & EDIT STUDIO (BESERTA KELOLA TIPE & FASILITAS)
+   URL Endpoint: GET `/admin/tambah-ruangan`, POST `/admin/tambah-ruangan`, 
+                 GET `/admin/edit-ruangan?id={id}`, POST `/admin/edit-ruangan`
+   Template    : `src/main/resources/templates/admin/tambah_ruangan.html`
+   Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Input nama studio, deskripsi spesifikasi audio visual, dan status operasional.
+   - Dropdown Tipe Studio beserta Modal CRUD Tipe Studio Mandiri:
+     * Pengelola dapat menambah tipe studio baru (misal: "4DX", "Dolby Atmos") atau menghapus tipe studio 
+       melalui modal popup interaktif tanpa me-refresh halaman.
+   - Pilihan Multi-Fasilitas Studio beserta Modal CRUD Fasilitas Mandiri:
+     * Checkbox fasilitas terpasang (misal: "Proyektor Laser 4K", "Dolby Atmos Sound", "Recliner Seats").
+     * Modal popup untuk menambah fasilitas baru atau menghapus fasilitas yang sudah usang.
+   - Tombol "Lanjut ke Setup Kursi ->" yang otomatis mengarahkan admin ke canvas denah kursi setelah studio disimpan.
+
+10. HALAMAN MANAJEMEN KURSI STUDIO (INTERACTIVE CANVAS & BRUSH EDITOR)
+    URL Endpoint: GET `/admin/manajemen-kursi?studioId={id}`
+    Template    : `src/main/resources/templates/admin/manajemen_kursi.html`
+    Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+    Rincian Fitur:
+    - Editor Denah Kursi Berbasis Kuas (Interactive Seat Canvas Brush):
+      * Canvas visualisasi denah studio dengan representasi "LAYAR PROYEKTOR".
+      * Menampilkan penghitung kapasitas kursi aktif secara real-time.
+    - Panel Kuas Aktif (Brush Palette):
+      * Kuas "Jalan Setapak (Kosong / Walkway)": Untuk menggambar lorong jalan penonton di mana tidak ada kursi.
+      * Kuas Kelas Kursi Dinamis: Kuas warna untuk masing-masing kelas kursi (Reguler, Sweetbox, Premiere).
+      * Tombol "+ Buat Kuas" (Modal Tambah Kelas Kursi):
+        - Input nama kelas kursi (misal: "VIP Lounge").
+        - Biaya tambahan kursi (Surcharge, misal Rp15.000).
+        - Pemilih warna penanda (Color Picker Hex).
+        - Rentang Kolom (Span Kolom): Mengatur lebar kursi (contoh: 2 untuk Sweetbox pasangan).
+      * Kemampuan menghapus kuas kelas kursi.
+    - Pengatur Dimensi Ruangan Studio:
+      * Input jumlah baris vertikal (1 sampai 26 baris, otomatis dilabeli alfabet A-Z).
+      * Input jumlah kolom horizontal (1 sampai 50 kolom).
+      * Tombol "Terapkan Dimensi" untuk men-generate matriks grid baru secara instan.
+    - Penggambaran Interaktif: Admin cukup mengeklik sel kursi pada canvas dengan kuas aktif untuk 
+      mengubah tipe kursi secara langsung.
+    - Tombol "Simpan Perubahan Layout": Mengirimkan seluruh konfigurasi matriks kursi ke server melalui 
+      AJAX POST `/admin/api/simpan-kursi` dengan proteksi token CSRF.
+
+11. HALAMAN MANAJEMEN PROMOSI & BANNER CMS
+    URL Endpoint: GET `/admin/manajemen-promosi`, POST `/admin/toggle-promosi/{id}`, POST `/admin/hapus-promosi/{id}`
+    Template    : `src/main/resources/templates/admin/manajemen_promosi.html`
+    Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+    Rincian Fitur:
+    - Pratinjau Carousel Beranda Langsung (Live Carousel Preview):
+      * Slider carousel interaktif di bagian atas halaman yang menampilkan persis bagaimana banner 
+        promo akan terlihat di halaman depan pengunjung.
+      * Dilengkapi tombol navigasi panah kiri/kanan dan judul keterangan promo.
+    - Filter Promo: Pencarian judul banner, filter status (Semua / Aktif / Nonaktif), serta rentang 
+      tanggal mulai dan tanggal akhir penayangan.
+    - Kartu Daftar Banner Promosi:
+      * Menampilkan thumbnail poster landscape, judul promosi, rentang tanggal tayang, dan tautan target URL.
+    - Sakelar Status Aktif Instan (Toggle Switch):
+      * Toggle switch interaktif untuk mengaktifkan atau menonaktifkan banner promosi secara instan tanpa 
+        perlu membuka halaman edit.
+    - Tombol Edit & Tombol Hapus (membersihkan file gambar dari direktori uploads).
+
+12. HALAMAN TAMBAH & EDIT BANNER PROMOSI
+    URL Endpoint: GET `/admin/tambah-promosi`, POST `/admin/tambah-promosi`, 
+                  GET `/admin/edit-promosi?id={id}`, POST `/admin/edit-promosi`
+    Template    : `src/main/resources/templates/admin/tambah_promosi.html`
+    Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+    Rincian Fitur:
+    - Area Dropzone Khusus Gambar Landscape (Rasio 21:9 atau 16:9) dengan fitur live preview.
+    - Input Judul Promosi.
+    - Input URL Target (opsional): Menentukan halaman yang akan dibuka saat penonton mengklik banner tersebut.
+    - Input Tanggal Mulai dan Tanggal Berakhir Masa Berlaku Promosi.
+    - Checkbox opsi "Langsung Aktifkan Banner Ini".
+
+13. HALAMAN MANAJEMEN TRANSAKSI PENJUALAN
+    URL Endpoint: GET `/admin/manajemen-transaksi`, POST `/admin/transaksi/ajukan-refund`
+    Template    : `src/main/resources/templates/admin/manajemen_transaksi.html`
+    Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+    Rincian Fitur:
+    - Pemantauan Seluruh Transaksi Pelanggan:
+      * Menampilkan Nomor Pesanan, Nama Lengkap Pelanggan, Total Nominal Pembayaran, Status Pembayaran 
+        (Success, Pending, Refund), Status Refund, serta Tanggal & Waktu Transaksi secara kronologis menurun.
+    - Fitur Ekspor Transaksi (Cetak Laporan / CSV): Tombol cetak riwayat transaksi.
+    - Panel Filter & Pencarian: Pencarian nomor order/nama pelanggan, filter dropdown status pembayaran, 
+      serta filter tanggal transaksi.
+    - Fitur Pengajuan Refund oleh Admin atas Permintaan Pelanggan (Admin Initiated Refund):
+      * Tombol "Ajukan Refund" pada baris transaksi sukses.
+      * Modal popup pengajuan refund: Input alasan pengajuan, nama pemilik rekening/e-wallet, serta nomor 
+        rekening tujuan.
+      * Sistem secara ketat memeriksa agar transaksi belum memiliki tiket yang expired atau pengajuan 
+        refund yang sedang aktif.
+
+14. HALAMAN MANAJEMEN DAN VERIFIKASI REFUND
+    URL Endpoint: GET `/admin/refunds`, POST `/admin/refund/approve/{id}`, 
+                  POST `/admin/refund/reject/{id}`, POST `/admin/refund/process/{id}`
+    Template    : `src/main/resources/templates/admin/manajemen_refund.html`
+    Akses       : `ROLE_ADMIN` dan `ROLE_SUPER_ADMIN`
+    Rincian Fitur:
+    - Pemantauan Seluruh Berkas Pengajuan Pengembalian Dana:
+      * Nomor order tiket, nama pelanggan, total nominal dana, alasan refund dari pemohon, informasi 
+        rekening tujuan transfer, waktu pengajuan, dan status refund saat ini.
+    - Filter Status Pengajuan: Semua Status, PENDING (Menunggu), APPROVED (Diterima), REJECTED (Ditolak), 
+      dan PROCESSED (Dana Telah Ditransfer).
+    - Mekanisme Persetujuan Refund 3 Tahap (Three-Phase Refund Workflow):
+      * Tahap 1 - Peninjauan (PENDING):
+        - Tombol "Approve": Admin menyetujui refund. Begitu disetujui, sistem secara otomatis melepaskan 
+          kursi bioskop yang sebelumnya terkunci sehingga kursi tersebut kembali tersedia dan dapat dibeli 
+          oleh pelanggan lain di website.
+        - Tombol "Reject": Membuka modal penolakan refund. Admin wajib menuliskan alasan penolakan 
+          (maksimal 2000 karakter). Status transaksi pelanggan akan dikembalikan menjadi lunas (PAID) 
+          dan alasan penolakan dapat dibaca pelanggan di e-tiketnya.
+      * Tahap 2 - Persetujuan (APPROVED): Pengajuan telah disetujui staf dan menunggu bagian keuangan 
+        mentransfer dana pengembalian.
+      * Tahap 3 - Penyelesaian (PROCESSED):
+        - Tombol "Lanjutkan": Admin menandai bahwa dana pengembalian telah berhasil ditransfer ke rekening 
+          pelanggan. Status transaksi berubah menjadi REFUNDED penuh.
+
+
+----------------------------------------------------------------------------------------------------
+2.3 ROLE SUPER ADMIN (MANAJER UTAMA / PEMILIK BIOSKOP)
+----------------------------------------------------------------------------------------------------
+Super Admin memiliki kontrol eksekutif tertinggi terhadap seluruh sistem. Selain memiliki akses 
+penuh ke seluruh fitur Role Admin di atas, Super Admin memiliki 4 modul eksklusif berikut:
+
+1. HALAMAN LAPORAN PENDAPATAN & ANALITIK BISNIS (REVENUE ANALYTICS)
+   URL Endpoint: GET `/admin/laporan`
+   Template    : `src/main/resources/templates/admin/laporan_pendapatan.html`
+   Akses       : Khusus `ROLE_SUPER_ADMIN` (Dilindungi `@PreAuthorize("hasRole('SUPER_ADMIN')")`)
+   Rincian Fitur:
+   - Kartu Rangkuman Omzet Eksekutif (Total Revenue Card):
+     * Menampilkan total pendapatan bersih keseluruhan dari seluruh penjualan tiket yang sukses dalam 
+       format mata uang Rupiah dengan latar gradien merah elegan.
+   - Grafik Tren Pendapatan Harian (Daily Revenue Line Chart):
+     * Grafik garis interaktif (Chart.js) yang memetakan fluktuasi pendapatan dari hari ke hari secara visual.
+     * Titik koordinat menyajikan nilai nominal pendapatan harian secara presisi saat kursor diarahkan.
+   - Grafik Proporsi Kontribusi Film (Film Revenue Contribution Doughnut Chart):
+     * Grafik donat interaktif (Chart.js) yang memvisualisasikan persentase kontribusi penjualan tiket 
+       dari masing-masing judul film bioskop.
+     * Mempermudah manajemen dalam menentukan film terlaris (Box Office) dan film yang kurang diminati penonton.
+   - Tabel Analitik Rincian Pendapatan Film:
+     * Menyajikan matriks komparasi judul film dan total nominal pemasukan yang dihasilkan oleh film tersebut.
+   - State Penanganan Data Kosong: Menampilkan pesan visual ramah jika belum ada tiket yang terjual.
+
+2. HALAMAN MANAJEMEN STAF & HAK AKSES ADMINISTRATOR
+   URL Endpoint: GET `/admin/staf`, POST `/admin/staf/tambah`, POST `/admin/staf/hapus/{id}`
+   Template    : `src/main/resources/templates/admin/manajemen_staf.html`
+   Akses       : Khusus `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Tabel Akun Administrator:
+     * Menampilkan seluruh personel pengelola bioskop: Nama Lengkap, Alamat Email / Username, dan 
+       Peran Otoritas (Badge Biru untuk Admin biasa; Badge Merah untuk Super Admin).
+   - Modal Tambah Akun Staf Baru:
+     * Input Nama Lengkap staf.
+     * Input Alamat Email staf (validasi pencegahan email duplikat).
+     * Input Password sementara untuk staf.
+     * Dropdown Hak Akses / Peran:
+       - `ROLE_ADMIN`: Staf operasional & kasir (terbatas pada operasional harian).
+       - `ROLE_SUPER_ADMIN`: Manajer utama (akses penuh hingga pengaturan dan laporan).
+     * Password otomatis dienkripsi dengan standar BCrypt saat disimpan.
+   - Penghapusan Akun Staf:
+     * Tombol "Hapus" akun staf yang dilengkapi dialog konfirmasi.
+     * Proteksi Anti Self-Delete: Akun Super Admin yang sedang login tidak dapat menghapus akunnya 
+       sendiri (ditandai label `(Anda Sendiri)`) guna mencegah hilangnya akses administratif sistem.
+
+3. HALAMAN AUDIT LOG AKTIVITAS SISTEM (SECURITY AUDIT TRAIL)
+   URL Endpoint: GET `/admin/audit-log`, GET `/admin/audit-log/export`
+   Template    : `src/main/resources/templates/admin/audit_log.html`
+   Akses       : Khusus `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Perekaman Jejak Aktivitas Keamanan Real-Time (Audit Service Integration):
+     * Merekam setiap aksi modifikasi data penting: CREATE (Penambahan), UPDATE (Perubahan), 
+       DELETE (Penghapusan), dan LOGIN (Masuk sistem).
+     * Menyimpan informasi detail: Waktu Kejadian presisi hingga detik, Nama Admin Pelaksana, 
+       Tindakan (Action Type), Objek Sasaran yang diubah, Alamat IP (IP Address) perangkat, serta Keterangan detail.
+   - Filter & Pencarian Log Audit:
+     * Kolom pencarian bebas berdasarkan nama admin pelaksana atau keterangan objek.
+     * Filter dropdown tipe aksi (Semua Aksi, CREATE, UPDATE, DELETE, LOGIN).
+     * Filter berdasarkan tanggal kejadian.
+   - Ekspor Berkas Audit Log (Export to CSV):
+     * Tombol "Export CSV" yang secara instan men-download seluruh rekam jejak audit sistem ke dalam 
+       file spreadsheet CSV (`audit_log.csv`) berformat terstruktur dan aman dari CSV Injection.
+
+4. HALAMAN PENGATURAN GLOBAL BIOSKOP & SISTEM
+   URL Endpoint: GET `/admin/pengaturan`, POST `/admin/pengaturan`, 
+                 POST `/admin/pengaturan/profil`, POST `/admin/pengaturan/password`
+   Template    : `src/main/resources/templates/admin/pengaturan_admin.html`
+   Akses       : Khusus `ROLE_SUPER_ADMIN`
+   Rincian Fitur:
+   - Pembaruan Profil Administrator Utama:
+     * Mengubah nama lengkap dan email resmi admin yang akan tercatat di log audit sistem.
+   - Pembaruan Kata Sandi Administrator:
+     * Verifikasi kata sandi lama dan input kata sandi baru minimal 8 karakter unik.
+   - Konfigurasi Identitas & Cabang Bioskop:
+     * Nama Bioskop: Nama yang akan tampil pada seluruh logo, kop tiket, judul halaman, dan invoice.
+     * Alamat Bioskop: Lokasi fisik cabang bioskop.
+     * Kontak Customer Service: Nomor WhatsApp atau email bantuan pelanggan.
+     * Tautan Sematan Google Maps (Google Maps Embed URL): Mendukung tautan langsung, URL embed, 
+       maupun tag `<iframe>` yang otomatis diformat sistem untuk dirender di Beranda.
+   - Konfigurasi Jam Operasional Harian (Per-Day Operating Hours Matrix):
+     * Konfigurasi mandiri untuk 7 hari dalam sepekan (Senin, Selasa, Rabu, Kamis, Jumat, Sabtu, Minggu).
+     * Sakelar Toggle Buka/Tutup: Jika sakelar dimatikan pada hari tertentu (misal: bioskop tutup), 
+       sistem otomatis melarang penerbitan jadwal tayang pada hari tersebut.
+     * Jam Mulai & Jam Selesai: Mengatur rentang jam buka operasional per hari (misal Senin: 10:00 - 22:00, 
+       Sabtu: 08:00 - 24:00). Matriks jadwal tayang akan otomatis menyesuaikan skala jam ini.
+   - Konfigurasi Provider Payment Gateway Midtrans:
+     * Pilihan Environment: Beralih instan antara mode "Sandbox (Testing)" dan mode "Production (Live)".
+     * Client Key: Kunci publik Midtrans yang diinjeksikan ke script Snap frontend.
+     * Server Key: Kunci rahasia Midtrans untuk otentikasi API backend.
+     * Proteksi Sensor Kredensial: Di halaman pengaturan, Server Key dan Client Key disensor dengan 
+       bintang (`********`) agar tidak dapat diintip oleh pihak yang tidak bertanggung jawab.
+   - Konfigurasi Biaya & Transaksi Bioskop:
+     * Tarif Pajak / PPN (%): Persentase pajak transaksi tiket.
+     * Biaya Layanan (Platform Fee Rp): Nominal biaya administrasi per transaksi.
+     * Maksimal Tiket per Transaksi: Pembatasan kuota pembelian tiket per checkout guna mencegah penimbunan oleh calo.
+   - Kebijakan Pengembalian Dana (Refund Policy Global):
+     * Batas Waktu Pengajuan Refund (Jam sebelum tayang): Menentukan toleransi H- berapa jam tiket boleh 
+       di-refund oleh pelanggan (default 2 jam sebelum film dimulai).
+     * Potongan Saldo Refund (%): Menentukan persentase potongan administrasi refund (misal potongan 20% 
+       berarti pelanggan menerima pengembalian sebesar 80% dari total yang dibayarkan).
+
+
+====================================================================================================
+BAGIAN 3: CATATAN KEAMANAN & ARSITEKTUR TEKNIS UNGGULAN
+====================================================================================================
+
+1. Proteksi Privilege Escalation:
+   Rute manajerial `/admin/pengaturan/**`, `/admin/staf/**`, `/admin/audit-log/**`, dan `/admin/laporan/**` 
+   dikunci secara ketat hanya untuk `ROLE_SUPER_ADMIN` baik di tingkat Security Filter Chain maupun 
+   anotasi `@PreAuthorize`.
+2. Proteksi Insecure Direct Object Reference (IDOR):
+   Seluruh transaksi dan tiket hanya dapat diakses atau diajukan refund oleh pemilik akun yang sah 
+   berdasarkan session otentikasi Spring Security.
+3. Proteksi Race Condition & Double Booking:
+   Validasi ganda ketersediaan kursi (`isSeatBooked`) dijalankan secara atomik sebelum transaksi dibuat, 
+   menjamin tidak akan pernah ada dua penonton yang mendapatkan kursi yang sama pada satu jadwal.
+4. Validasi Keamanan Unggah Berkas Poster (Anti-Web Shell):
+   Pemeriksaan MIME-type file poster, batas ukuran maksimal 2MB, sanitasi nama file menjadi UUID acak, 
+   serta validasi rasio potret 2:3.
+5. Verifikasi Integritas Webhook Payment (SHA-512 Signature):
+   Webhook notifikasi pembayaran dari Midtrans diverifikasi menggunakan hash kriptografi SHA-512 
+   dengan Server Key rahasia sebelum sistem mengubah status transaksi menjadi sukses (lunas).
+6. Port Standar:
+   Aplikasi selalu berjalan pada port 8081 guna menghindari konflik port dengan server lokal XAMPP (Apache 8080/80).
+
+====================================================================================================
+                                      AKHIR DOKUMEN
+====================================================================================================
+

@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="id" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aktivasi Akun Berhasil — Cineplex</title>
+  <link rel="stylesheet" th:href="@{/css/style.css}">
+  <noscript>
+    <meta http-equiv="refresh" content="5;url=/login">
+  </noscript>
+</head>
+
+<body class="auth">
+  <section class="auth-card" role="region" aria-label="Aktivasi Akun Berhasil" style="text-align: center;">
+    <div style="margin-bottom: 20px;">
+      <a class="brand" th:href="@{/}"><span th:text="${appConfig != null ? #strings.toUpperCase(appConfig.namaBioskop) : 'CINEPLEX'}">CINEPLEX</span></a>
+    </div>
+
+    <!-- Ikon Centang Sukses -->
+    <div style="width: 72px; height: 72px; margin: 0 auto 18px; border-radius: 50%; background-color: rgba(82, 196, 26, 0.15); display: flex; align-items: center; justify-content: center;">
+      <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#52c41a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+    </div>
+
+    <h1 style="color: #52c41a; font-size: 22px; margin-bottom: 10px;">Akun Anda Berhasil Diaktivasi!</h1>
+
+    <p class="muted" style="font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+      Selamat datang, <strong th:text="${namaLengkap != null ? namaLengkap : 'Pelanggan'}">Pelanggan</strong>!<br>
+      Email Anda telah berhasil diverifikasi. Akun Anda kini sudah aktif dan siap digunakan untuk memesan tiket film favorit.
+    </p>
+
+    <!-- Tombol Masuk Alternatif -->
+    <a th:href="@{/login}" id="btn-login" class="btn btn-primary" style="display: block; width: 100%; text-decoration: none; padding: 12px; font-weight: 600;">
+      Masuk ke Cinemax Sekarang &rarr;
+    </a>
+
+    <!-- Informasi Hitung Mundur Otomatis -->
+    <p id="countdown-text" class="muted" style="font-size: 13px; margin-top: 16px;">
+      Anda akan otomatis dialihkan ke halaman masuk dalam <strong id="countdown-timer" style="color: #ffffff;">5</strong> detik...
+    </p>
+
+    <noscript>
+      <p style="font-size: 12px; color: #faad14; margin-top: 10px;">
+        (JavaScript tidak aktif di browser Anda. Halaman akan dialihkan otomatis dalam 5 detik atau silakan klik tombol di atas.)
+      </p>
+    </noscript>
+
+    <hr style="margin: 24px 0 16px; border: 0; border-top: 1px solid #333;">
+    <div>
+      <a class="btn btn-ghost" th:href="@{/}">Kembali ke Beranda</a>
+    </div>
+  </section>
+
+  <script th:inline="javascript">
+    (function () {
+      let seconds = 5;
+      const countdownEl = document.getElementById('countdown-timer');
+
+      const timer = setInterval(function () {
+        seconds--;
+        if (countdownEl) {
+          countdownEl.textContent = seconds;
+        }
+        if (seconds <= 0) {
+          clearInterval(timer);
+          window.location.replace('/login');
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+
+</html>
+

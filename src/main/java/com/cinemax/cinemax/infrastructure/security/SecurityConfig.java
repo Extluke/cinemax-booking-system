@@ -21,9 +21,15 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
         private final CustomAuthenticationSuccessHandler successHandler;
+        private final CustomOidcUserService oidcUserService;
+        private final CustomOAuth2UserService oAuth2UserService;
 
-        public SecurityConfig(CustomAuthenticationSuccessHandler successHandler) {
+        public SecurityConfig(CustomAuthenticationSuccessHandler successHandler,
+                              CustomOidcUserService oidcUserService,
+                              CustomOAuth2UserService oAuth2UserService) {
                 this.successHandler = successHandler;
+                this.oidcUserService = oidcUserService;
+                this.oAuth2UserService = oAuth2UserService;
         }
 
         @Bean
@@ -43,7 +49,9 @@ public class SecurityConfig {
                                                                 "/lupa-password",
                                                                 "/forgot-password-process", "/reset-password",
                                                                 "/reset-password-process", "/jelajah",
-                                                                "/film/**", "/pilih-jadwal", "/promo/**")
+                                                                "/film/**", "/pilih-jadwal", "/promo/**",
+                                                                "/aktivasi-akun", "/aktivasi-berhasil", "/kirim-ulang-aktivasi",
+                                                                "/oauth2/**", "/login/oauth2/**")
                                                 .permitAll() // Halaman publik
                                                 .requestMatchers("/api/payment/notification")
                                                 .permitAll() // Webhook notifikasi pembayaran Midtrans via Cloudflare
@@ -63,6 +71,14 @@ public class SecurityConfig {
                                                 .successHandler(successHandler) // Arahkan sesuai role (Admin ke Dashboard, User ke Beranda)
                                                 .failureUrl("/login?error=true")
                                                 .permitAll())
+                                .oauth2Login(oauth2 -> oauth2
+                                                .loginPage("/login")
+                                                .successHandler(successHandler)
+                                                .failureUrl("/login?error=google_failed")
+                                                .userInfoEndpoint(userInfo -> userInfo
+                                                                .oidcUserService(oidcUserService)
+                                                                .userService(oAuth2UserService)
+                                                ))
                                 .logout(logout -> logout
                                                 .logoutUrl("/logout")
                                                 .logoutSuccessUrl("/")

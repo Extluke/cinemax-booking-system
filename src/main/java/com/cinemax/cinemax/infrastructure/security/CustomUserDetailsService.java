@@ -23,9 +23,19 @@ public class CustomUserDetailsService implements UserDetailsService {
         User user = userRepository.findByEmail(email)
             .orElseThrow(() -> new UsernameNotFoundException("User tidak ditemukan dengan email: " + email));
 
+        String password = user.getPassword();
+        if (password == null || password.isBlank()) {
+            // Placeholder password agar akun OAuth2 Google tidak dapat di-bruteforce via form login lokal dan tidak memicu NPE
+            password = "{noop}DISABLED_GOOGLE_OAUTH_ACCOUNT_PASSWORD";
+        }
+
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getPassword(),
+                password,
+                user.isEnabled(),
+                true,
+                true,
+                true,
                 Collections.singletonList(new SimpleGrantedAuthority(user.getRole()))
         );
     }

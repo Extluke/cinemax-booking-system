@@ -29,6 +29,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -107,7 +111,38 @@ public class PageController {
     }
 
     @GetMapping("/login")
-    public String login() {
+    public String login(HttpServletRequest request, Model model) {
+        HttpSession session = request.getSession(false);
+        boolean accountDisabled = false;
+        String errorParam = request.getParameter("error");
+
+        if (errorParam == null) {
+            // Akses normal ke /login, pastikan tidak ada sisa error sesi lama
+            if (session != null) {
+                session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+                session.removeAttribute("LAST_LOGIN_ATTEMPT_DISABLED");
+            }
+        } else {
+            // Ada param ?error
+            if (session != null) {
+                Object lastException = session.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+                if (lastException instanceof DisabledException) {
+                    accountDisabled = true;
+                    // Hapus dari sesi setelah dibaca (sekali pakai)
+                    session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+                    session.setAttribute("LAST_LOGIN_ATTEMPT_DISABLED", true);
+                } else if (Boolean.TRUE.equals(session.getAttribute("LAST_LOGIN_ATTEMPT_DISABLED"))) {
+                    // Kasus refresh pada URL /login?error... untuk akun non-aktif
+                    accountDisabled = true;
+                    session.removeAttribute("LAST_LOGIN_ATTEMPT_DISABLED");
+                } else if (lastException != null) {
+                    session.removeAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+                    session.removeAttribute("LAST_LOGIN_ATTEMPT_DISABLED");
+                }
+            }
+        }
+
+        model.addAttribute("accountDisabled", accountDisabled);
         return "login";
     }
 
@@ -447,6 +482,13 @@ public class PageController {
         com.cinemax.cinemax.domain.booking.Transaksi transaksi = transaksiRepository.findById(transaksiId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaksi tidak ditemukan."));
 
+        org.springframework.security.core.Authentication auth = org.springframework.security.core.context.SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName())) {
+            if (transaksi.getPelanggan() != null && !transaksi.getPelanggan().getEmail().equalsIgnoreCase(auth.getName())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Anda tidak memiliki akses ke transaksi ini.");
+            }
+        }
+
         java.util.List<com.cinemax.cinemax.domain.booking.Tiket> tiketList = tiketRepository
                 .findByTransaksiId(transaksiId);
 
@@ -455,6 +497,11 @@ public class PageController {
         }
 
         Jadwal jadwal = tiketList.get(0).getJadwal();
+
+        // Token Snap hanya boleh diserahkan jika transaksi sudah terverifikasi OTP
+        if (!transaksi.isOtpVerified()) {
+            token = null;
+        }
 
         model.addAttribute("transaksi", transaksi);
         model.addAttribute("tiketList", tiketList);
