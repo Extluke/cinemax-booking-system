@@ -487,12 +487,12 @@ public class AdminPageController {
                     ? posterFile.getOriginalFilename().toLowerCase()
                     : "";
             boolean isContentTypeValid = contentType != null && (contentType.equals("image/jpeg")
-                    || contentType.equals("image/png") || contentType.equals("image/jpg"));
+                    || contentType.equals("image/png") || contentType.equals("image/jpg") || contentType.equals("image/webp"));
             boolean isExtensionValid = originalFilename.endsWith(".jpg") || originalFilename.endsWith(".jpeg")
-                    || originalFilename.endsWith(".png");
+                    || originalFilename.endsWith(".png") || originalFilename.endsWith(".webp");
 
             if (!isContentTypeValid || !isExtensionValid) {
-                return "redirect:/admin/manajemen-film?error=invalidfile";
+                return "redirect:/admin/tambah-film?error=invalidfile";
             }
             try {
                 // Buat direktori jika belum ada
@@ -569,9 +569,9 @@ public class AdminPageController {
                     ? posterFile.getOriginalFilename().toLowerCase()
                     : "";
             boolean isContentTypeValid = contentType != null && (contentType.equals("image/jpeg")
-                    || contentType.equals("image/png") || contentType.equals("image/jpg"));
+                    || contentType.equals("image/png") || contentType.equals("image/jpg") || contentType.equals("image/webp"));
             boolean isExtensionValid = originalFilename.endsWith(".jpg") || originalFilename.endsWith(".jpeg")
-                    || originalFilename.endsWith(".png");
+                    || originalFilename.endsWith(".png") || originalFilename.endsWith(".webp");
 
             if (!isContentTypeValid || !isExtensionValid) {
                 return "redirect:/admin/manajemen-film?error=invalidfile";

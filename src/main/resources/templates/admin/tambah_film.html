@@ -17,6 +17,15 @@
       <a class="btn btn-secondary" href="/admin/manajemen-film">← Batal & Kembali</a>
     </div>
 
+    <!-- Alert Notifikasi Server-Side -->
+    <div th:if="${param.error != null and param.error[0] == 'invalidfile'}" 
+         style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">🚫</span>
+      <div>
+        <strong>Format Berkas Ditolak!</strong> Format Poster salah! Hanya terima JPG, PNG, atau WEBP.
+      </div>
+    </div>
+
     <section class="card">
       <form th:action="@{/admin/tambah-film}" method="post" enctype="multipart/form-data" id="filmForm" onsubmit="return validateForm(event)">
         <div class="form-grid">
@@ -84,15 +93,49 @@
     </section>
   </main>
   <script>
+    function resetPoster() {
+      const input = document.getElementById('posterFile');
+      if (input) input.value = "";
+      const placeholder = document.getElementById('posterPlaceholder');
+      const preview = document.getElementById('posterPreview');
+      if (placeholder) placeholder.style.display = 'block';
+      if (preview) {
+        preview.src = '#';
+        preview.style.display = 'none';
+      }
+      const dropzone = document.getElementById('posterDropzone');
+      if (dropzone) {
+        dropzone.style.borderColor = '#dc3545';
+        dropzone.style.backgroundColor = 'rgba(220, 53, 69, 0.05)';
+        setTimeout(() => {
+          dropzone.style.borderColor = '';
+          dropzone.style.backgroundColor = '';
+        }, 2500);
+      }
+    }
+
     function previewPoster(event) {
       const input = event.target;
       if (input.files && input.files[0]) {
         const file = input.files[0];
         
+        // Pengecekan Ekstensi & MIME Format Poster (Hanya JPG, JPEG, PNG, WEBP)
+        const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+        const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+        const fileName = (file.name || '').toLowerCase();
+        const isExtensionValid = allowedExtensions.some(ext => fileName.endsWith(ext));
+        const isTypeValid = allowedTypes.includes(file.type);
+
+        if (!isExtensionValid || (!isTypeValid && file.type !== '')) {
+            alert("Format Poster salah! Hanya terima JPG, PNG, atau WEBP.");
+            resetPoster();
+            return;
+        }
+
         // Cek ukuran file (Max 2MB)
         if (file.size > 2 * 1024 * 1024) {
             alert("Ukuran file terlalu besar! Maksimal 2MB.");
-            input.value = "";
+            resetPoster();
             return;
         }
 
@@ -112,9 +155,18 @@
             preview.src = e.target.result;
             preview.style.display = 'block';
           };
+          img.onerror = function() {
+            alert("Format Poster salah! Hanya terima JPG, PNG, atau WEBP.");
+            resetPoster();
+          };
           img.src = e.target.result;
-        }
-        
+        };
+
+        reader.onerror = function() {
+          alert("Gagal membaca berkas gambar! Pastikan berkas tidak rusak.");
+          resetPoster();
+        };
+
         reader.readAsDataURL(file);
       }
     }
@@ -148,9 +200,14 @@
         if (!posterFile) {
             errors.push("- Poster Film belum diunggah.");
         } else {
-            // Pengecekan Ekstensi
+            // Pengecekan Ekstensi & MIME
             const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
-            if (!allowedTypes.includes(posterFile.type)) {
+            const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+            const fileName = (posterFile.name || '').toLowerCase();
+            const isExtensionValid = allowedExtensions.some(ext => fileName.endsWith(ext));
+            const isTypeValid = allowedTypes.includes(posterFile.type);
+
+            if (!isExtensionValid || (!isTypeValid && posterFile.type !== '')) {
                 errors.push("- Format Poster salah! Hanya terima JPG, PNG, atau WEBP.");
             }
             // Pengecekan Size (Maksimal 2MB)
