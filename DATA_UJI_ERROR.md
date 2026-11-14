@@ -119,9 +119,9 @@ Sistem yang baik **tidak boleh langsung *crash* (White Screen / Error 500)** saa
 |---|---|---|---|---|---|---|---|---|---|
 | 1 | `TC-GNR-ERR-01` | Nama Genre | Mengosongkan nama genre | **Nama Genre**: `""` (String kosong) | BVA (Empty) | Client-side (HTML5 `required`) | Form diblokir submit oleh browser. Muncul peringatan: *"Please fill out this field"* / *"Bidang ini wajib diisi"*. | Sesuai | **Valid (Error Tertangani)** |
 | 2 | `TC-GNR-ERR-02` | Nama Genre | Memasukkan nama genre yang sudah ada (Duplikasi) | **Nama Genre**: `"Action"` *(asumsi genre Action sudah ada dalam database)* | Unique Constraint / Business Rule | Server-side (`GenreController`) | Sistem mendeteksi duplikasi via `existsByNama()`, redirect ke `/admin/tambah-genre?error=duplicate`. Muncul kotak merah: *"Gagal Disimpan! Genre dengan nama tersebut sudah ada."* | Sesuai | **Valid (Error Tertangani)** |
-| 3 | `TC-GNR-ERR-03` | Nama Genre | Memasukkan nama genre yang hanya berisi spasi kosong | **Nama Genre**: `"     "` (5 karakter spasi) | Error Guessing / Whitespace | Server / Database | Jika lolos client-side, menghasilkan data nama genre tanpa arti (anomali tampilan). Disarankan penambahan `.trim()`. | Terdeteksi | **Catatan Evaluasi Sistem** |
-| 4 | `TC-GNR-ERR-04` | Nama Genre | Memasukkan teks sangat panjang melebihi kapasitas kolom DB | **Nama Genre**: String acak sepanjang 300 karakter (melebihi limit `VARCHAR(255)`) | BVA (Maximum Length) | Database Constraint | Ditolak oleh MySQL/Hibernate dengan `DataIntegrityViolationException` (Data too long for column 'nama'). | Sesuai | **Valid (Error Tertangani)** |
-| 5 | `TC-GNR-ERR-05` | Nama Genre | Percobaan injeksi karakter SQL berbahaya | **Nama Genre**: `Sci-Fi'; DROP TABLE genres;--` | Security / Injection Test | Database / ORM | Spring Data JPA menggunakan parameter terikat (*Prepared Statement*), perintah DROP TABLE dinetralkan menjadi string literal biasa tanpa merusak tabel. | Sesuai | **Aman (Injeksi Tertangkal)** |
+| 3 | `TC-GNR-ERR-03` | Nama Genre | Memasukkan nama genre yang hanya berisi spasi kosong | **Nama Genre**: `"     "` (5 karakter spasi) | Error Guessing / Whitespace | Client-side & Server-side | Pengiriman data dibatalkan. Muncul popup dialog alert: *"- Nama Genre tidak boleh kosong atau hanya berupa spasi."* Server redirect `?error=empty`. | Sesuai | **Valid (Error Tertangani)** |
+| 4 | `TC-GNR-ERR-04` | Nama Genre | Memasukkan teks sangat panjang melebihi kapasitas kolom DB | **Nama Genre**: String acak sepanjang 300 karakter (melebihi limit `VARCHAR(255)`) | BVA (Maximum Length) | Client-side & Server-side | Input dibatasi atribut HTML5 `maxlength="50"`. Jika dipaksakan (> 50 karakter), muncul popup dialog alert: *"- Nama Genre terlalu panjang (maksimal 50 karakter)."* Server redirect `?error=toolong`. | Sesuai | **Valid (Error Tertangani)** |
+| 5 | `TC-GNR-ERR-05` | Nama Genre | Percobaan injeksi karakter SQL berbahaya | **Nama Genre**: `Sci-Fi'; DROP TABLE genres;--` | Security / Injection Test | Client-side & Server-side | Pengiriman data dibatalkan. Terdeteksi pola injeksi, muncul popup dialog alert: *"- Terdeteksi karakter atau perintah terlarang (SQL Injection / Script berbahaya)."* Server redirect `?error=security`. | Sesuai | **Aman & Valid (Injeksi Tertangkal)** |
 
 ---
 
@@ -147,8 +147,10 @@ Bagi mahasiswa yang ingin mendemonstrasikan atau mengambil tangkapan layar (*scr
    - Email: `admin@cineplex.com`
    - Password: `admin123`
 2. Buka menu **Master Data / Genre** atau kunjungi `http://localhost:8081/admin/tambah-genre`.
-3. Masukkan nama genre yang sudah pernah dibuat (misalnya: `Action`), lalu klik **Simpan Genre**.
-4. Ambil tangkapan layar kotak pemberitahuan merah: *"Gagal Disimpan! Genre dengan nama tersebut sudah ada."*
+3. Masukkan nama genre yang sudah pernah dibuat (misalnya: `Action`), lalu klik **Simpan Genre**. Ambil tangkapan layar kotak pemberitahuan merah: *"Gagal Disimpan! Genre dengan nama tersebut sudah ada."*
+4. Masukkan hanya karakter spasi kosong `"     "` lalu klik tombol simpan: sistem langsung memblokir formulir dan memunculkan popup alert penolakan spasi kosong.
+5. Coba masukkan teks lebih dari 50 karakter (misal teks 300 karakter): field dikunci oleh batas `maxlength="50"` atau ditolak dengan alert batas panjang karakter.
+6. Coba masukkan karakter atau token injeksi SQL berbahaya (misal `Sci-Fi'; DROP TABLE genres;--`): sistem langsung mendeteksi pola injeksi berbahaya, memunculkan popup peringatan keamanan, dan membatalkan pengiriman.
 
 ### D. Prosedur Uji Form Tambah Film
 1. Kunjungi menu **Manajemen Film** lalu klik tombol **Tambah Film Baru** (`http://localhost:8081/admin/tambah-film`).

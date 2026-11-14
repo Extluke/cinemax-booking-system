@@ -31,10 +31,35 @@ public class GenreController {
 
     @PostMapping("/tambah-genre")
     public String prosesTambahGenre(@RequestParam String nama) {
-        if (genreRepository.existsByNama(nama)) {
+        String trimmed = (nama != null) ? nama.trim() : "";
+
+        // 1. Guard Whitespace / Kosong (Skenario 3)
+        if (trimmed.isEmpty()) {
+            return "redirect:/admin/tambah-genre?error=empty";
+        }
+
+        // 2. Guard Panjang Karakter (Skenario 4)
+        if (trimmed.length() > 50) {
+            return "redirect:/admin/tambah-genre?error=toolong";
+        }
+
+        // 3. Guard SQL Injection & Simbol Berbahaya (Skenario 5)
+        String upper = trimmed.toUpperCase();
+        if (trimmed.contains(";") || trimmed.contains("'") || trimmed.contains("\"")
+                || trimmed.contains("--") || trimmed.contains("/*") || trimmed.contains("*/")
+                || trimmed.contains("<") || trimmed.contains(">") || trimmed.contains("\\")
+                || upper.contains("DROP TABLE") || upper.contains("SELECT ") || upper.contains("INSERT ")
+                || upper.contains("DELETE ") || upper.contains("UPDATE ") || upper.contains("UNION ")
+                || upper.contains("OR '1'='1")) {
+            return "redirect:/admin/tambah-genre?error=security";
+        }
+
+        // 4. Guard Duplikasi Unik (Skenario 2)
+        if (genreRepository.existsByNama(trimmed)) {
             return "redirect:/admin/tambah-genre?error=duplicate";
         }
-        Genre genre = new Genre(nama);
+
+        Genre genre = new Genre(trimmed);
         genreRepository.save(genre);
         return "redirect:/admin/manajemen-genre?success=true";
     }
