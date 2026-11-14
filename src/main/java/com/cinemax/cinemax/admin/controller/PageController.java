@@ -532,7 +532,9 @@ public class PageController {
             return null;
         }
 
-        return filmSedangTayang.get(0);
+        return filmSedangTayang.stream()
+                .max(java.util.Comparator.comparing(Film::getId, java.util.Comparator.nullsFirst(java.util.Comparator.naturalOrder())))
+                .orElse(null);
     }
 
     /**
