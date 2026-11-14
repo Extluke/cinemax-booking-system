@@ -25,6 +25,13 @@
         <strong>Format Berkas Ditolak!</strong> Format Poster salah! Hanya terima JPG, PNG, atau WEBP.
       </div>
     </div>
+    <div th:if="${param.error != null and param.error[0] == 'invalidduration'}" 
+         style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 24px;">⏱️</span>
+      <div>
+        <strong>Durasi Film Tidak Valid!</strong> Durasi penayangan harus berupa angka positif lebih dari 0 menit (tidak boleh bernilai negatif atau 0 menit).
+      </div>
+    </div>
 
     <section class="card">
       <form th:action="@{/admin/tambah-film}" method="post" enctype="multipart/form-data" id="filmForm" onsubmit="return validateForm(event)">
@@ -47,7 +54,7 @@
             </div>
             <div class="field">
               <label for="duration">Durasi Penayangan (Menit)</label>
-              <input class="input" id="duration" name="durasi" type="number" placeholder="Contoh: 124" required>
+              <input class="input" id="duration" name="durasi" type="number" min="1" placeholder="Contoh: 124" required onchange="checkDurationInput(this)">
             </div>
             <div class="field">
               <label for="status">Status Penayangan</label>
@@ -171,6 +178,25 @@
       }
     }
 
+    function checkDurationInput(input) {
+      const val = parseInt(input.value, 10);
+      if (!isNaN(val) && val <= 0) {
+        if (val < 0) {
+          alert("Perhatian: Durasi film tidak boleh bernilai negatif! Mohon masukkan durasi yang valid (> 0 menit).");
+        } else {
+          alert("Perhatian: Durasi film tidak boleh bernilai 0 menit! Mohon masukkan durasi penayangan yang realistis (minimal 1 menit).");
+        }
+        input.value = "";
+        input.focus();
+        input.style.borderColor = '#dc3545';
+        input.style.backgroundColor = 'rgba(220, 53, 69, 0.05)';
+        setTimeout(() => {
+          input.style.borderColor = '';
+          input.style.backgroundColor = '';
+        }, 2000);
+      }
+    }
+
     // FORM VALIDATION SCRIPT (Mengecek 8 Kondisi)
     function validateForm(e) {
         const judul = document.getElementById('movie-title').value.trim();
@@ -216,8 +242,17 @@
             }
         }
 
-        // 4. Durasi diisi
-        if (!durasi) errors.push("- Durasi Penayangan belum diisi.");
+        // 4. Durasi diisi & bernilai positif (> 0)
+        const durasiNum = parseInt(durasi, 10);
+        if (!durasi) {
+            errors.push("- Durasi Penayangan belum diisi.");
+        } else if (isNaN(durasiNum) || durasiNum <= 0) {
+            if (durasiNum < 0) {
+                errors.push("- Durasi Penayangan tidak boleh bernilai negatif (harus lebih dari 0 menit).");
+            } else {
+                errors.push("- Durasi Penayangan tidak boleh bernilai 0 menit (harus minimal 1 menit).");
+            }
+        }
         
         // 5. Status terselect
         if (!status) errors.push("- Status Penayangan belum dipilih.");

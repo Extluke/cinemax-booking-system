@@ -30,6 +30,13 @@
             <strong>Format Berkas Ditolak!</strong> Format Poster salah! Hanya terima berkas gambar JPG, PNG, atau WEBP.
           </div>
         </div>
+        <div th:if="${param.error != null and param.error[0] == 'invalidduration'}" 
+             style="background-color: rgba(220, 53, 69, 0.1); border: 1px solid #dc3545; color: #dc3545; padding: 14px 18px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 24px;">⏱️</span>
+          <div>
+            <strong>Durasi Film Tidak Valid!</strong> Durasi penayangan harus berupa angka positif lebih dari 0 menit.
+          </div>
+        </div>
 
         <!-- Filter & Search Controls -->
         <form class="filters" method="get" action="/admin/manajemen-film" style="display: flex; gap: 10px; margin-bottom: 20px;">

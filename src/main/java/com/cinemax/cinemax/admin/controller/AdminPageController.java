@@ -473,6 +473,12 @@ public class AdminPageController {
             @RequestParam String batasUsia,
             @RequestParam(required = false) List<Long> genreIds,
             @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
+
+        // Guard Durasi Penayangan (> 0 menit)
+        if (durasi == null || durasi <= 0) {
+            return "redirect:/admin/tambah-film?error=invalidduration";
+        }
+
         Film film = new Film();
         film.setJudul(judul);
         film.setSinopsis(sinopsis);
@@ -555,6 +561,11 @@ public class AdminPageController {
         Film film = filmRepository.findById(id).orElse(null);
         if (film == null)
             return "redirect:/admin/manajemen-film?error=notfound";
+
+        // Guard Durasi Penayangan (> 0 menit)
+        if (durasi == null || durasi <= 0) {
+            return "redirect:/admin/manajemen-film?error=invalidduration";
+        }
 
         film.setJudul(judul);
         film.setSinopsis(sinopsis);
