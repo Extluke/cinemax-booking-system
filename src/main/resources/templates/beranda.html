@@ -53,6 +53,9 @@
 
     <!-- Hero mengambil film unggulan pertama dengan status SEDANG_TAYANG. -->
     <section class="hero" th:if="${featuredFilm != null}">
+      <img alt="Backdrop film" class="hero-backdrop" th:if="${!#strings.isEmpty(featuredFilm.posterUrl)}" th:src="${featuredFilm.posterUrl}">
+      <div class="hero-overlay" th:if="${!#strings.isEmpty(featuredFilm.posterUrl)}"></div>
+
       <div class="hero-content">
         <span class="badge badge-info">SEDANG TAYANG</span>
         <h1 th:text="${featuredFilm.judul}">Film Unggulan</h1>
