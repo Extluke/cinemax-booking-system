@@ -473,6 +473,12 @@ public class AdminPageController {
             @RequestParam String batasUsia,
             @RequestParam(required = false) List<Long> genreIds,
             @RequestParam(value = "posterFile", required = false) MultipartFile posterFile) {
+
+        // Guard Durasi Penayangan (> 0 menit)
+        if (durasi == null || durasi <= 0) {
+            return "redirect:/admin/tambah-film?error=invalidduration";
+        }
+
         Film film = new Film();
         film.setJudul(judul);
         film.setSinopsis(sinopsis);
@@ -487,12 +493,12 @@ public class AdminPageController {
                     ? posterFile.getOriginalFilename().toLowerCase()
                     : "";
             boolean isContentTypeValid = contentType != null && (contentType.equals("image/jpeg")
-                    || contentType.equals("image/png") || contentType.equals("image/jpg"));
+                    || contentType.equals("image/png") || contentType.equals("image/jpg") || contentType.equals("image/webp"));
             boolean isExtensionValid = originalFilename.endsWith(".jpg") || originalFilename.endsWith(".jpeg")
-                    || originalFilename.endsWith(".png");
+                    || originalFilename.endsWith(".png") || originalFilename.endsWith(".webp");
 
             if (!isContentTypeValid || !isExtensionValid) {
-                return "redirect:/admin/manajemen-film?error=invalidfile";
+                return "redirect:/admin/tambah-film?error=invalidfile";
             }
             try {
                 // Buat direktori jika belum ada
@@ -556,6 +562,11 @@ public class AdminPageController {
         if (film == null)
             return "redirect:/admin/manajemen-film?error=notfound";
 
+        // Guard Durasi Penayangan (> 0 menit)
+        if (durasi == null || durasi <= 0) {
+            return "redirect:/admin/manajemen-film?error=invalidduration";
+        }
+
         film.setJudul(judul);
         film.setSinopsis(sinopsis);
         film.setDurasi(durasi);
@@ -569,9 +580,9 @@ public class AdminPageController {
                     ? posterFile.getOriginalFilename().toLowerCase()
                     : "";
             boolean isContentTypeValid = contentType != null && (contentType.equals("image/jpeg")
-                    || contentType.equals("image/png") || contentType.equals("image/jpg"));
+                    || contentType.equals("image/png") || contentType.equals("image/jpg") || contentType.equals("image/webp"));
             boolean isExtensionValid = originalFilename.endsWith(".jpg") || originalFilename.endsWith(".jpeg")
-                    || originalFilename.endsWith(".png");
+                    || originalFilename.endsWith(".png") || originalFilename.endsWith(".webp");
 
             if (!isContentTypeValid || !isExtensionValid) {
                 return "redirect:/admin/manajemen-film?error=invalidfile";
